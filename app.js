@@ -1,28 +1,36 @@
 /* global window, document */
 
-const STORAGE_KEY = "tremor-sim-platform";
+/**
+ * Tremor Monitor Pro - Clinical Dashboard
+ * Professional Parkinson's Disease Tremor Analysis Software
+ */
 
+const STORAGE_KEY = "tremor-sim-platform";
+const THEME_KEY = "tremor-theme";
+const SIDEBAR_COLLAPSED_KEY = "tremor-sidebar-collapsed";
+
+// Seed data for initial profiles
 const seedProfiles = [
-  { id: "p1", name: "Clinical Baseline", updated: "2024-03-14 09:12", freq: 4.2, amp: 35, noise: 12 },
-  { id: "p2", name: "High Frequency", updated: "2024-03-18 15:44", freq: 7.1, amp: 52, noise: 18 },
-  { id: "p3", name: "Low Noise", updated: "2024-03-21 11:05", freq: 3.6, amp: 28, noise: 6 }
+  { id: "p1", name: "PD Rest Tremor", updated: "2024-03-14 09:12", freq: 4.5, amp: 45, noise: 8 },
+  { id: "p2", name: "Essential Tremor", updated: "2024-03-18 15:44", freq: 6.5, amp: 35, noise: 15 },
+  { id: "p3", name: "Postural Tremor", updated: "2024-03-21 11:05", freq: 5.2, amp: 25, noise: 12 }
 ];
 
 const seedSequences = [
   {
     id: "s1",
-    name: "Ramp Cycle",
+    name: "Medication Response",
     steps: [
-      { duration: 8, freq: 4.0, amp: 25, noise: 8 },
-      { duration: 10, freq: 5.5, amp: 45, noise: 12 },
-      { duration: 6, freq: 3.8, amp: 30, noise: 10 }
+      { duration: 10, freq: 5.0, amp: 50, noise: 10 },
+      { duration: 15, freq: 4.5, amp: 35, noise: 8 },
+      { duration: 10, freq: 4.2, amp: 20, noise: 6 }
     ]
   }
 ];
 
 const seedSessions = [
-  createSessionSeed("Morning Calibration", "2024-03-20 08:02", 420, 2100, 4.6, 42),
-  createSessionSeed("Therapy Trial A", "2024-03-21 16:28", 300, 1800, 5.1, 48)
+  createSessionSeed("Morning Assessment", "2024-03-20 08:02", 420, 2100, 4.6, 42),
+  createSessionSeed("Post-Medication", "2024-03-21 16:28", 300, 1800, 4.2, 28)
 ];
 
 const state = {
@@ -55,7 +63,9 @@ const state = {
     buffer: new Array(300).fill(0),
     t: 0,
     freeze: false,
-    lastSample: 0
+    lastSample: 0,
+    mouseX: null,
+    mouseY: null
   },
   playback: {
     intervalId: null,
@@ -63,11 +73,22 @@ const state = {
     stepIndex: 0,
     elapsed: 0,
     playing: false
+  },
+  theme: "light",
+  sidebarCollapsed: false,
+  clinicalMetrics: {
+    frequency: 0,
+    rms: 0,
+    power: 0,
+    regularity: 0,
+    updrs: 0,
+    snr: 0
   }
 };
 
 const elements = {};
 
+// Helper functions
 function $(selector, root = document) {
   return root.querySelector(selector);
 }
@@ -143,14 +164,94 @@ function calculateSummary(samples) {
   const avg = sum / samples.length;
   const rms = Math.sqrt(sumSq / samples.length);
   const noise = Math.max(0, rms - Math.abs(avg));
-  return {
-    avg,
-    rms,
-    peak,
-    noise
-  };
+  return { avg, rms, peak, noise };
 }
 
+// Theme management
+function initTheme() {
+  const savedTheme = window.localStorage.getItem(THEME_KEY);
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+  if (savedTheme) {
+    state.theme = savedTheme;
+  } else if (prefersDark) {
+    state.theme = "dark";
+  }
+
+  applyTheme();
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", state.theme);
+
+  const lightIcon = $("#themeIconLight");
+  const darkIcon = $("#themeIconDark");
+  const darkModeToggle = $("#settingDarkMode");
+
+  if (lightIcon && darkIcon) {
+    if (state.theme === "dark") {
+      lightIcon.style.display = "none";
+      darkIcon.style.display = "block";
+    } else {
+      lightIcon.style.display = "block";
+      darkIcon.style.display = "none";
+    }
+  }
+
+  if (darkModeToggle) {
+    darkModeToggle.checked = state.theme === "dark";
+  }
+
+  window.localStorage.setItem(THEME_KEY, state.theme);
+}
+
+function toggleTheme() {
+  state.theme = state.theme === "light" ? "dark" : "light";
+  applyTheme();
+}
+
+// Sidebar collapse management
+function initSidebarCollapse() {
+  const savedState = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+  if (savedState === "true") {
+    state.sidebarCollapsed = true;
+  }
+  applySidebarCollapse();
+}
+
+function applySidebarCollapse() {
+  const main = $(".main");
+  const isMobile = window.innerWidth <= 900;
+
+  if (isMobile) {
+    elements.sidebar.classList.remove("collapsed");
+    if (main) {
+      main.style.marginLeft = "0";
+    }
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, state.sidebarCollapsed);
+    return;
+  }
+
+  if (state.sidebarCollapsed) {
+    elements.sidebar.classList.add("collapsed");
+    if (main && window.innerWidth > 900) {
+      main.style.marginLeft = "var(--sidebar-collapsed)";
+    }
+  } else {
+    elements.sidebar.classList.remove("collapsed");
+    if (main && window.innerWidth > 900) {
+      main.style.marginLeft = "var(--sidebar-width)";
+    }
+  }
+  window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, state.sidebarCollapsed);
+}
+
+function toggleSidebarCollapse() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  applySidebarCollapse();
+}
+
+// Data persistence
 function loadData() {
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored) {
@@ -178,6 +279,7 @@ function persist() {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
+// DOM element binding
 function bindElements() {
   elements.tabs = $$(".nav-item");
   elements.panels = $$(".tab-panel");
@@ -191,6 +293,7 @@ function bindElements() {
   elements.topStatusPill = $("#topStatusPill");
   elements.topLatency = $("#topLatency");
   elements.topPer = $("#topPer");
+  elements.themeToggle = $("#themeToggle");
 
   elements.connectionMode = $("#connectionMode");
   elements.connectBtn = $("#connectBtn");
@@ -219,9 +322,24 @@ function bindElements() {
   elements.freezeBtn = $("#freezeBtn");
   elements.clearBtn = $("#clearBtn");
   elements.tremorCanvas = $("#tremorCanvas");
-  elements.readoutFreq = $("#readoutFreq");
-  elements.readoutRms = $("#readoutRms");
-  elements.readoutNoise = $("#readoutNoise");
+  elements.chartContainer = $("#chartContainer");
+  elements.chartTooltip = $("#chartTooltip");
+
+  // Clinical metrics
+  elements.metricFrequency = $("#metricFrequency");
+  elements.metricRMS = $("#metricRMS");
+  elements.metricPower = $("#metricPower");
+  elements.metricRegularity = $("#metricRegularity");
+  elements.metricUPDRS = $("#metricUPDRS");
+  elements.metricSNR = $("#metricSNR");
+
+  // Metric indicators
+  elements.freqIndicator = $("#freqIndicator");
+  elements.rmsIndicator = $("#rmsIndicator");
+  elements.powerIndicator = $("#powerIndicator");
+  elements.regularityIndicator = $("#regularityIndicator");
+  elements.updrsIndicator = $("#updrsIndicator");
+  elements.snrIndicator = $("#snrIndicator");
 
   elements.profileSelect = $("#profileSelect");
   elements.loadProfileBtn = $("#loadProfileBtn");
@@ -250,8 +368,11 @@ function bindElements() {
   elements.deleteSessionBtn = $("#deleteSessionBtn");
   elements.exportCsvBtn = $("#exportCsvBtn");
   elements.exportJsonBtn = $("#exportJsonBtn");
+
+  elements.settingDarkMode = $("#settingDarkMode");
 }
 
+// Tab navigation
 function initTabs() {
   elements.tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -267,7 +388,7 @@ function initTabs() {
           panel.classList.remove("active");
         }
       });
-      elements.pageTitle.textContent = tab.textContent;
+      elements.pageTitle.textContent = tab.textContent.trim();
       setSidebarOpen(false);
     });
   });
@@ -290,11 +411,11 @@ function initSidebarToggle() {
     const isOpen = elements.sidebar.classList.contains("open");
     setSidebarOpen(!isOpen);
   };
-  elements.sidebarToggle.addEventListener("click", toggle);
   elements.mobileNavToggle.addEventListener("click", toggle);
   elements.sidebarOverlay.addEventListener("click", () => setSidebarOpen(false));
 }
 
+// Connection UI
 function updateConnectionUI() {
   const status = state.connection.status;
   elements.connectionStatusPill.textContent = capitalize(status);
@@ -303,9 +424,18 @@ function updateConnectionUI() {
   elements.topStatusPill.dataset.status = status;
 
   elements.sidebarStatusText.textContent = capitalize(status);
-  elements.sidebarStatusDot.style.background = statusColor(status);
+  elements.sidebarStatusDot.className = `status-dot ${status}`;
 
-  elements.connectBtn.textContent = status === "connected" ? "Disconnect" : "Connect";
+  const buttonText = status === "connected" ? "Disconnect" : "Connect";
+  elements.connectBtn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${status === "connected"
+        ? '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+        : '<path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>'
+      }
+    </svg>
+    ${buttonText}
+  `;
   elements.connectBtn.disabled = status === "connecting";
 
   const latency = state.connection.latency;
@@ -317,7 +447,7 @@ function updateConnectionUI() {
 
   if (elements.healthMode) {
     elements.healthMode.textContent =
-      state.connection.mode === "mock" ? "Mock" : capitalize(state.connection.mode);
+      state.connection.mode === "mock" ? "Simulation" : capitalize(state.connection.mode);
   }
 }
 
@@ -332,6 +462,7 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+// Connection handling
 let connectTimer = null;
 let metricsTimer = null;
 
@@ -375,13 +506,34 @@ function handleConnectClick() {
   }, 800);
 }
 
+// Logging/Session recording
 function setLogging(enabled) {
   state.logging = enabled;
-  elements.loggingStatus.textContent = enabled ? "On" : "Off";
-  const label = enabled ? "Stop Logging" : "Start Logging";
-  elements.logToggleBtn.textContent = label;
-  elements.sidebarLogBtn.textContent = label;
-  elements.sessionsLogBtn.textContent = label;
+  elements.loggingStatus.textContent = enabled ? "Recording" : "Inactive";
+
+  const label = enabled ? "Stop Recording" : "Start Recording";
+  const icon = enabled
+    ? '<rect x="6" y="6" width="12" height="12" rx="2"/>'
+    : '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>';
+
+  const buttonHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${icon}
+    </svg>
+    <span class="btn-text">${label}</span>
+  `;
+
+  const sessionsButtonHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${icon}
+    </svg>
+    ${label}
+  `;
+
+  elements.logToggleBtn.textContent = enabled ? "Stop" : "Start";
+  elements.sidebarLogBtn.innerHTML = buttonHTML;
+  elements.sidebarLogBtn.title = label;
+  elements.sessionsLogBtn.innerHTML = sessionsButtonHTML;
 
   if (enabled) {
     const start = new Date();
@@ -430,6 +582,7 @@ function stopLoggingSampler() {
   }
 }
 
+// Parameter UI
 function updateParamUI() {
   elements.freqRange.value = state.params.freq;
   elements.freqNumber.value = state.params.freq.toFixed(1);
@@ -518,11 +671,21 @@ function handleStop() {
   updateParamUI();
 }
 
+// Visualization
 function setupVisualization() {
   resizeCanvas(elements.tremorCanvas);
-  window.addEventListener("resize", () => resizeCanvas(elements.tremorCanvas));
+  window.addEventListener("resize", () => {
+    resizeCanvas(elements.tremorCanvas);
+    // Re-apply sidebar collapse state on resize to handle responsive changes
+    applySidebarCollapse();
+  });
+
+  // Chart tooltip interactivity
+  elements.chartContainer.addEventListener("mousemove", handleChartMouseMove);
+  elements.chartContainer.addEventListener("mouseleave", handleChartMouseLeave);
+
   requestAnimationFrame(animate);
-  window.setInterval(updateReadouts, 600);
+  window.setInterval(updateClinicalMetrics, 500);
 }
 
 function resizeCanvas(canvas) {
@@ -567,24 +730,63 @@ function drawChart() {
   const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
 
+  // Get theme colors from CSS variables
+  const style = getComputedStyle(document.documentElement);
+  const chartPrimary = style.getPropertyValue("--chart-primary").trim() || "#0066ff";
+  const chartSecondary = style.getPropertyValue("--chart-secondary").trim() || "#0891b2";
+  const chartGrid = style.getPropertyValue("--chart-grid").trim() || "rgba(0, 0, 0, 0.06)";
+
+  // Background gradient
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "rgba(11, 95, 255, 0.12)");
-  gradient.addColorStop(1, "rgba(20, 133, 140, 0.08)");
+  gradient.addColorStop(0, `${chartPrimary}15`);
+  gradient.addColorStop(1, `${chartSecondary}08`);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+  // Draw grid lines
+  ctx.strokeStyle = chartGrid;
   ctx.lineWidth = 1;
+
+  // Horizontal grid lines
+  for (let i = 0; i <= 4; i++) {
+    const y = (height / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  // Vertical grid lines
+  for (let i = 0; i <= 6; i++) {
+    const x = (width / 6) * i;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+
+  // Center line
+  ctx.strokeStyle = chartGrid;
+  ctx.lineWidth = 2;
   const mid = height / 2;
   ctx.beginPath();
+  ctx.setLineDash([5, 5]);
   ctx.moveTo(0, mid);
   ctx.lineTo(width, mid);
   ctx.stroke();
+  ctx.setLineDash([]);
 
+  // Draw signal
   const data = state.visualization.buffer;
   const scale = (height * 0.35) / 100;
-  ctx.strokeStyle = "rgba(11, 95, 255, 0.9)";
-  ctx.lineWidth = 2;
+
+  // Glow effect
+  ctx.shadowColor = chartPrimary;
+  ctx.shadowBlur = 8;
+  ctx.strokeStyle = chartPrimary;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   ctx.beginPath();
   data.forEach((value, index) => {
     const x = (index / (data.length - 1)) * width;
@@ -596,17 +798,170 @@ function drawChart() {
     }
   });
   ctx.stroke();
+
+  // Reset shadow
+  ctx.shadowBlur = 0;
+
+  // Draw cursor indicator if hovering
+  if (state.visualization.mouseX !== null) {
+    const mouseX = state.visualization.mouseX;
+    const ratio = window.devicePixelRatio || 1;
+    const canvasX = mouseX * ratio;
+    const index = Math.floor((canvasX / width) * data.length);
+
+    if (index >= 0 && index < data.length) {
+      const x = (index / (data.length - 1)) * width;
+      const y = mid - data[index] * scale;
+
+      // Vertical line
+      ctx.strokeStyle = `${chartSecondary}60`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point indicator
+      ctx.fillStyle = chartPrimary;
+      ctx.beginPath();
+      ctx.arc(x, y, 6 * ratio, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(x, y, 3 * ratio, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 }
 
-function updateReadouts() {
-  const rms = calculateSummary(state.visualization.buffer).rms;
-  const freq = state.params.freq + randomBetween(-0.08, 0.08);
-  const noise = state.params.noise + randomBetween(-1, 1);
-  elements.readoutFreq.textContent = formatNumber(freq, 2);
-  elements.readoutRms.textContent = formatNumber(rms, 1);
-  elements.readoutNoise.textContent = formatNumber(noise, 1);
+function handleChartMouseMove(event) {
+  const rect = elements.chartContainer.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  state.visualization.mouseX = x;
+  state.visualization.mouseY = y;
+
+  // Update tooltip
+  const data = state.visualization.buffer;
+  const index = Math.floor((x / rect.width) * data.length);
+
+  if (index >= 0 && index < data.length) {
+    const amplitude = data[index];
+    const phase = ((state.visualization.t * state.params.freq * 360) % 360).toFixed(1);
+
+    $("#tooltipAmplitude").textContent = formatNumber(amplitude, 2);
+    $("#tooltipTime").textContent = `${index}/${data.length}`;
+    $("#tooltipPhase").textContent = `${phase}°`;
+
+    // Position tooltip
+    const tooltip = elements.chartTooltip;
+    let tooltipX = x + 15;
+    let tooltipY = y - 10;
+
+    // Keep tooltip within bounds
+    if (tooltipX + 200 > rect.width) {
+      tooltipX = x - 195;
+    }
+    if (tooltipY < 0) {
+      tooltipY = y + 20;
+    }
+
+    tooltip.style.left = `${tooltipX}px`;
+    tooltip.style.top = `${tooltipY}px`;
+    tooltip.classList.add("visible");
+  }
 }
 
+function handleChartMouseLeave() {
+  state.visualization.mouseX = null;
+  state.visualization.mouseY = null;
+  elements.chartTooltip.classList.remove("visible");
+}
+
+// Clinical metrics calculation
+function updateClinicalMetrics() {
+  const buffer = state.visualization.buffer;
+  const summary = calculateSummary(buffer);
+
+  // Dominant frequency (simulated with some jitter)
+  const baseFreq = state.params.freq;
+  const freqJitter = randomBetween(-0.1, 0.1);
+  state.clinicalMetrics.frequency = baseFreq + freqJitter;
+
+  // RMS Amplitude
+  state.clinicalMetrics.rms = summary.rms;
+
+  // Power Spectral Density (simulated, in dB)
+  const power = summary.rms > 0 ? 10 * Math.log10(summary.rms * summary.rms) : -40;
+  state.clinicalMetrics.power = Math.max(-40, power);
+
+  // Regularity Index (based on signal consistency)
+  // Higher amplitude and lower noise = more regular
+  const signalStrength = state.params.enabled ? state.params.amp : 0;
+  const noiseLevel = state.params.noise;
+  const regularity = signalStrength > 0
+    ? Math.max(0, Math.min(100, 100 - (noiseLevel / signalStrength) * 50))
+    : 0;
+  state.clinicalMetrics.regularity = regularity;
+
+  // Estimated UPDRS Score (0-4 scale based on amplitude)
+  // 0 = None, 1 = Slight, 2 = Mild, 3 = Moderate, 4 = Severe
+  let updrsScore = 0;
+  if (summary.rms > 5) updrsScore = 1;
+  if (summary.rms > 15) updrsScore = 2;
+  if (summary.rms > 30) updrsScore = 3;
+  if (summary.rms > 50) updrsScore = 4;
+  state.clinicalMetrics.updrs = updrsScore;
+
+  // Signal-to-Noise Ratio
+  const signalPower = signalStrength * signalStrength;
+  const noisePower = noiseLevel * noiseLevel * 0.1;
+  const snr = noisePower > 0 ? 10 * Math.log10(signalPower / noisePower) : 40;
+  state.clinicalMetrics.snr = Math.max(-10, Math.min(40, snr));
+
+  // Update UI
+  updateClinicalMetricsUI();
+}
+
+function updateClinicalMetricsUI() {
+  const m = state.clinicalMetrics;
+
+  // Update values
+  elements.metricFrequency.textContent = formatNumber(m.frequency, 2);
+  elements.metricRMS.textContent = formatNumber(m.rms, 1);
+  elements.metricPower.textContent = formatNumber(m.power, 1);
+  elements.metricRegularity.textContent = formatNumber(m.regularity, 0);
+  elements.metricUPDRS.textContent = m.updrs;
+  elements.metricSNR.textContent = formatNumber(m.snr, 1);
+
+  // Update indicators
+  updateIndicator(elements.freqIndicator, m.frequency, 4, 6, 3, 8);
+  updateIndicator(elements.rmsIndicator, m.rms, 0, 30, 0, 100);
+  updateIndicator(elements.powerIndicator, m.power, -20, 10, -40, 30);
+  updateIndicator(elements.regularityIndicator, m.regularity, 60, 100, 0, 100);
+  updateIndicator(elements.updrsIndicator, m.updrs, 0, 1, 0, 4);
+  updateIndicator(elements.snrIndicator, m.snr, 15, 40, -10, 40);
+}
+
+function updateIndicator(element, value, normalMin, normalMax, alertMin, alertMax) {
+  if (!element) return;
+
+  element.classList.remove("normal", "warning", "alert");
+
+  if (value >= normalMin && value <= normalMax) {
+    element.classList.add("normal");
+  } else if (value < alertMin || value > alertMax) {
+    element.classList.add("alert");
+  } else {
+    element.classList.add("warning");
+  }
+}
+
+// Profile management
 function renderProfiles() {
   elements.profileSelect.innerHTML = "";
   if (state.profiles.length === 0) {
@@ -634,16 +989,16 @@ function renderProfiles() {
   state.profiles.forEach((profile) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${profile.name}</td>
+      <td><strong>${profile.name}</strong></td>
       <td>${formatDate(profile.updated)}</td>
-      <td>${formatNumber(profile.freq, 1)} Hz</td>
-      <td>${Math.round(profile.amp)}</td>
-      <td>${Math.round(profile.noise)}</td>
+      <td><span style="font-family: var(--font-mono)">${formatNumber(profile.freq, 1)}</span> Hz</td>
+      <td><span style="font-family: var(--font-mono)">${Math.round(profile.amp)}</span></td>
+      <td><span style="font-family: var(--font-mono)">${Math.round(profile.noise)}</span></td>
       <td>
         <div class="table-actions">
           <button class="btn btn-secondary" data-action="load" data-id="${profile.id}">Load</button>
           <button class="btn btn-ghost" data-action="rename" data-id="${profile.id}">Rename</button>
-          <button class="btn btn-ghost" data-action="duplicate" data-id="${profile.id}">Duplicate</button>
+          <button class="btn btn-ghost" data-action="duplicate" data-id="${profile.id}">Copy</button>
           <button class="btn btn-danger" data-action="delete" data-id="${profile.id}">Delete</button>
         </div>
       </td>
@@ -660,9 +1015,10 @@ function renderSequences() {
     elements.sequencesEmpty.classList.add("hidden");
   }
 
-  state.sequences.forEach((sequence) => {
+  state.sequences.forEach((sequence, index) => {
     const item = document.createElement("div");
     item.className = "list-item";
+    item.style.animationDelay = `${index * 0.05}s`;
     if (sequence.id === state.selectedSequenceId) {
       item.classList.add("active");
     }
@@ -670,12 +1026,11 @@ function renderSequences() {
     item.innerHTML = `
       <div>
         <div class="list-title">${sequence.name}</div>
-        <div class="list-sub">${sequence.steps.length} steps - ${totalDuration}s</div>
+        <div class="list-sub">${sequence.steps.length} steps &middot; ${totalDuration}s total</div>
       </div>
       <div class="list-actions">
         <button class="btn btn-ghost" data-action="edit" data-id="${sequence.id}">Edit</button>
         <button class="btn btn-secondary" data-action="play" data-id="${sequence.id}">Play</button>
-        <button class="btn btn-ghost" data-action="duplicate" data-id="${sequence.id}">Duplicate</button>
         <button class="btn btn-danger" data-action="delete" data-id="${sequence.id}">Delete</button>
       </div>
     `;
@@ -690,8 +1045,13 @@ function renderSequenceEditor() {
   if (!sequence) {
     elements.sequenceEditor.innerHTML = `
       <div class="empty-state">
-        <h3>No sequence selected</h3>
-        <p>Choose a sequence from the library to edit steps.</p>
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </div>
+        <h3>No Sequence Selected</h3>
+        <p>Choose a sequence from the library to view and edit its steps.</p>
       </div>
     `;
     return;
@@ -700,15 +1060,15 @@ function renderSequenceEditor() {
   const stepsHtml = sequence.steps
     .map((step, index) => {
       return `
-        <div class="step-row" data-index="${index}">
-          <input type="number" min="1" step="1" value="${step.duration}" data-field="duration" data-index="${index}" />
-          <input type="number" min="3" max="8" step="0.1" value="${step.freq}" data-field="freq" data-index="${index}" />
-          <input type="number" min="0" max="100" step="1" value="${step.amp}" data-field="amp" data-index="${index}" />
-          <input type="number" min="0" max="100" step="1" value="${step.noise}" data-field="noise" data-index="${index}" />
+        <div class="step-row" data-index="${index}" style="animation-delay: ${index * 0.05}s">
+          <input type="number" min="1" step="1" value="${step.duration}" data-field="duration" data-index="${index}" placeholder="Duration" />
+          <input type="number" min="3" max="8" step="0.1" value="${step.freq}" data-field="freq" data-index="${index}" placeholder="Freq" />
+          <input type="number" min="0" max="100" step="1" value="${step.amp}" data-field="amp" data-index="${index}" placeholder="Amp" />
+          <input type="number" min="0" max="100" step="1" value="${step.noise}" data-field="noise" data-index="${index}" placeholder="Noise" />
           <div class="step-actions">
-            <button class="btn btn-ghost" data-action="up" data-index="${index}">Up</button>
-            <button class="btn btn-ghost" data-action="down" data-index="${index}">Down</button>
-            <button class="btn btn-danger" data-action="remove" data-index="${index}">Remove</button>
+            <button class="btn btn-ghost" data-action="up" data-index="${index}">↑</button>
+            <button class="btn btn-ghost" data-action="down" data-index="${index}">↓</button>
+            <button class="btn btn-danger" data-action="remove" data-index="${index}">×</button>
           </div>
         </div>
       `;
@@ -717,38 +1077,57 @@ function renderSequenceEditor() {
 
   const playback = state.playback;
   let statusText = "Stopped";
+  let statusClass = "";
   if (playback.seqId === sequence.id) {
     const stepNumber = playback.stepIndex + 1;
     const step = sequence.steps[playback.stepIndex];
     const remaining = step ? Math.max(0, Math.round(step.duration - playback.elapsed)) : 0;
     statusText = playback.playing
-      ? `Playing - Step ${stepNumber} - ${remaining}s remaining`
-      : `Paused - Step ${stepNumber} - ${remaining}s remaining`;
+      ? `Playing Step ${stepNumber}/${sequence.steps.length} — ${remaining}s remaining`
+      : `Paused at Step ${stepNumber} — ${remaining}s remaining`;
+    statusClass = playback.playing ? "recording" : "";
   }
 
   elements.sequenceEditor.innerHTML = `
     <div class="sequence-editor">
       <div class="field">
-        <label for="sequenceName">Sequence name</label>
+        <label for="sequenceName">Sequence Name</label>
         <input type="text" id="sequenceName" value="${sequence.name}" />
       </div>
-      <div class="step-row" style="background: transparent; border: none; padding: 0;">
-        <div class="muted">Duration (sec)</div>
-        <div class="muted">Freq</div>
-        <div class="muted">Amp</div>
-        <div class="muted">Noise</div>
+      <div class="step-row" style="background: transparent; border: none; padding: 0 12px;">
+        <div class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Duration (s)</div>
+        <div class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Freq (Hz)</div>
+        <div class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Amplitude</div>
+        <div class="muted" style="font-size: 0.75rem; text-transform: uppercase;">Noise</div>
         <div></div>
       </div>
       ${stepsHtml}
-      <button class="btn btn-secondary" id="addStepBtn">Add step</button>
-      <div class="sequence-status">
+      <button class="btn btn-secondary" id="addStepBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Step
+      </button>
+      <div class="sequence-status ${statusClass}">
         <div>
-          <div class="label">Playback</div>
+          <div class="label">Playback Status</div>
           <div class="muted" id="sequenceStatus">${statusText}</div>
         </div>
-        <div class="button-row">
-          <button class="btn btn-primary" data-action="seq-play">Play</button>
-          <button class="btn btn-secondary" data-action="seq-pause">Pause</button>
+        <div class="button-row" style="margin-top: 0;">
+          <button class="btn btn-primary" data-action="seq-play">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Play
+          </button>
+          <button class="btn btn-secondary" data-action="seq-pause">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+            Pause
+          </button>
           <button class="btn btn-ghost" data-action="seq-stop">Stop</button>
         </div>
       </div>
@@ -767,10 +1146,10 @@ function renderSessions() {
   state.sessions.forEach((session) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${session.name}</td>
+      <td><strong>${session.name}</strong></td>
       <td>${session.start}</td>
-      <td>${formatDuration(session.durationSec)}</td>
-      <td>${session.sampleCount}</td>
+      <td><span style="font-family: var(--font-mono)">${formatDuration(session.durationSec)}</span></td>
+      <td><span style="font-family: var(--font-mono)">${session.sampleCount}</span></td>
       <td>
         <div class="table-actions">
           <button class="btn btn-secondary" data-action="view" data-id="${session.id}">View</button>
@@ -782,6 +1161,7 @@ function renderSessions() {
   });
 }
 
+// Modal management
 function openModal(modal) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
@@ -793,7 +1173,7 @@ function closeModal(modal) {
 }
 
 function bindModalEvents() {
-  $$('[data-close-modal]').forEach((btn) => {
+  $$("[data-close-modal]").forEach((btn) => {
     btn.addEventListener("click", () => {
       closeModal(elements.profileModal);
       closeModal(elements.sessionModal);
@@ -849,9 +1229,9 @@ function handleProfileActions(event) {
     updateParamUI();
   }
   if (action === "rename") {
-    const newName = window.prompt("Rename profile", profile.name);
-    if (newName) {
-      profile.name = newName;
+    const newName = window.prompt("Enter new profile name:", profile.name);
+    if (newName && newName.trim()) {
+      profile.name = newName.trim();
       profile.updated = new Date().toISOString().slice(0, 19).replace("T", " ");
     }
   }
@@ -859,7 +1239,7 @@ function handleProfileActions(event) {
     const copy = {
       ...profile,
       id: createId("profile"),
-      name: `${profile.name} Copy`,
+      name: `${profile.name} (Copy)`,
       updated: new Date().toISOString().slice(0, 19).replace("T", " ")
     };
     state.profiles.unshift(copy);
@@ -900,8 +1280,8 @@ function bindSequenceEvents() {
       id: createId("sequence"),
       name: `Sequence ${state.sequences.length + 1}`,
       steps: [
-        { duration: 6, freq: 4.0, amp: 30, noise: 10 },
-        { duration: 6, freq: 5.2, amp: 45, noise: 12 }
+        { duration: 10, freq: 4.5, amp: 40, noise: 10 },
+        { duration: 10, freq: 5.0, amp: 50, noise: 12 }
       ]
     };
     state.sequences.unshift(newSequence);
@@ -928,7 +1308,7 @@ function bindSequenceEvents() {
       const copy = {
         ...sequence,
         id: createId("sequence"),
-        name: `${sequence.name} Copy`,
+        name: `${sequence.name} (Copy)`,
         steps: sequence.steps.map((step) => ({ ...step }))
       };
       state.sequences.unshift(copy);
@@ -968,8 +1348,8 @@ function bindSequenceEvents() {
     const sequence = state.sequences.find((seq) => seq.id === state.selectedSequenceId);
     if (!sequence) return;
 
-    if (event.target.id === "addStepBtn") {
-      sequence.steps.push({ duration: 6, freq: 4.5, amp: 35, noise: 10 });
+    if (event.target.id === "addStepBtn" || event.target.closest("#addStepBtn")) {
+      sequence.steps.push({ duration: 10, freq: 4.5, amp: 40, noise: 10 });
       persist();
       renderSequences();
       return;
@@ -1089,26 +1469,91 @@ function bindSessionEvents() {
   });
 
   elements.exportCsvBtn.addEventListener("click", () => {
-    window.alert("Mock export: CSV prepared.");
+    const id = elements.deleteSessionBtn.dataset.id;
+    const session = state.sessions.find((s) => s.id === id);
+    if (session) {
+      exportSessionCSV(session);
+    }
   });
 
   elements.exportJsonBtn.addEventListener("click", () => {
-    window.alert("Mock export: JSON prepared.");
+    const id = elements.deleteSessionBtn.dataset.id;
+    const session = state.sessions.find((s) => s.id === id);
+    if (session) {
+      exportSessionJSON(session);
+    }
   });
+}
+
+function exportSessionCSV(session) {
+  const headers = ["Index", "Amplitude"];
+  const rows = session.samples.map((sample, i) => `${i},${sample.toFixed(4)}`);
+  const csv = [headers.join(","), ...rows].join("\n");
+  downloadFile(`${session.name.replace(/\s+/g, "_")}.csv`, csv, "text/csv");
+}
+
+function exportSessionJSON(session) {
+  const data = {
+    name: session.name,
+    start: session.start,
+    duration: session.durationSec,
+    sampleCount: session.sampleCount,
+    summary: session.summary,
+    samples: session.samples
+  };
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(`${session.name.replace(/\s+/g, "_")}.json`, json, "application/json");
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function openSessionModal(id) {
   const session = state.sessions.find((item) => item.id === id);
   if (!session) return;
+
+  const avgFreq = state.params.freq.toFixed(1);
+
   elements.sessionSummary.innerHTML = `
-    <div class="summary-card"><span>Duration</span><strong>${formatDuration(session.durationSec)}</strong></div>
-    <div class="summary-card"><span>Samples</span><strong>${session.sampleCount}</strong></div>
-    <div class="summary-card"><span>RMS</span><strong>${formatNumber(session.summary.rms, 1)}</strong></div>
-    <div class="summary-card"><span>Peak</span><strong>${formatNumber(session.summary.peak, 1)}</strong></div>
+    <div class="summary-card">
+      <span>Duration</span>
+      <strong>${formatDuration(session.durationSec)}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Samples</span>
+      <strong>${session.sampleCount}</strong>
+    </div>
+    <div class="summary-card">
+      <span>RMS Amplitude</span>
+      <strong>${formatNumber(session.summary.rms, 1)}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Peak Value</span>
+      <strong>${formatNumber(session.summary.peak, 1)}</strong>
+    </div>
+    <div class="summary-card">
+      <span>Avg Frequency</span>
+      <strong>${avgFreq} Hz</strong>
+    </div>
+    <div class="summary-card">
+      <span>Noise Level</span>
+      <strong>${formatNumber(session.summary.noise, 1)}</strong>
+    </div>
   `;
   elements.deleteSessionBtn.dataset.id = id;
   openModal(elements.sessionModal);
-  drawSessionChart(session.samples);
+
+  // Draw chart after modal is visible
+  setTimeout(() => drawSessionChart(session.samples), 50);
 }
 
 function drawSessionChart(samples) {
@@ -1118,13 +1563,27 @@ function drawSessionChart(samples) {
   const width = canvas.width;
   const height = canvas.height;
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "rgba(11, 95, 255, 0.08)";
+
+  // Get theme colors
+  const style = getComputedStyle(document.documentElement);
+  const chartSecondary = style.getPropertyValue("--chart-secondary").trim() || "#0891b2";
+
+  // Background
+  ctx.fillStyle = `${chartSecondary}10`;
   ctx.fillRect(0, 0, width, height);
+
   if (!samples || samples.length === 0) return;
+
   const mid = height / 2;
   const scale = (height * 0.35) / 100;
-  ctx.strokeStyle = "rgba(20, 133, 140, 0.9)";
+
+  // Glow effect
+  ctx.shadowColor = chartSecondary;
+  ctx.shadowBlur = 6;
+  ctx.strokeStyle = chartSecondary;
   ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   ctx.beginPath();
   samples.forEach((value, index) => {
     const x = (index / (samples.length - 1)) * width;
@@ -1135,17 +1594,38 @@ function drawSessionChart(samples) {
   ctx.stroke();
 }
 
+// Settings
+function bindSettingsEvents() {
+  const darkModeToggle = $("#settingDarkMode");
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("change", (event) => {
+      state.theme = event.target.checked ? "dark" : "light";
+      applyTheme();
+    });
+  }
+}
+
+// Initialize
 function init() {
   bindElements();
   loadData();
+  initTheme();
+  initSidebarCollapse();
 
   initTabs();
   initSidebarToggle();
+
+  // Sidebar collapse toggle (desktop)
+  elements.sidebarToggle.addEventListener("click", toggleSidebarCollapse);
   bindParamInputs();
   bindProfileEvents();
   bindSequenceEvents();
   bindSessionEvents();
   bindModalEvents();
+  bindSettingsEvents();
+
+  // Theme toggle
+  elements.themeToggle.addEventListener("click", toggleTheme);
 
   elements.connectionMode.addEventListener("change", (event) => {
     state.connection.mode = event.target.value;
@@ -1161,10 +1641,20 @@ function init() {
 
   elements.sendBtn.addEventListener("click", handleSend);
   elements.stopBtn.addEventListener("click", handleStop);
+
   elements.freezeBtn.addEventListener("click", () => {
     state.visualization.freeze = !state.visualization.freeze;
-    elements.freezeBtn.textContent = state.visualization.freeze ? "Resume" : "Freeze";
+    const icon = state.visualization.freeze
+      ? '<polygon points="5 3 19 12 5 21 5 3"/>'
+      : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    elements.freezeBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${icon}
+      </svg>
+      ${state.visualization.freeze ? "Resume" : "Freeze"}
+    `;
   });
+
   elements.clearBtn.addEventListener("click", () => {
     state.visualization.buffer = new Array(300).fill(0);
   });
