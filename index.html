@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tremor Simulation Platform</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <button class="icon-btn" id="sidebarToggle" aria-label="Toggle navigation">
+          <span class="icon">=</span>
+        </button>
+        <div>
+          <div class="brand-title">Tremor</div>
+          <div class="brand-sub">Simulation Platform</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-tab="dashboard">Dashboard</button>
+        <button class="nav-item" data-tab="profiles">Profiles</button>
+        <button class="nav-item" data-tab="sequences">Sequences</button>
+        <button class="nav-item" data-tab="sessions">Sessions</button>
+        <button class="nav-item" data-tab="settings">Settings</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="status-row">
+          <span class="status-dot" id="sidebarStatusDot"></span>
+          <span id="sidebarStatusText">Disconnected</span>
+        </div>
+        <button class="btn btn-ghost full" id="sidebarLogBtn">Start Logging</button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn mobile-only" id="mobileNavToggle" aria-label="Open navigation">
+            <span class="icon">=</span>
+          </button>
+          <div>
+            <h1 id="pageTitle">Dashboard</h1>
+            <p class="subtitle">Tremor Simulation Platform</p>
+          </div>
+        </div>
+        <div class="topbar-status">
+          <div class="status-pill" id="topStatusPill" data-status="disconnected">Disconnected</div>
+          <div class="metric-inline">
+            <span>Latency</span>
+            <strong id="topLatency">--</strong>
+            <small>ms</small>
+          </div>
+          <div class="metric-inline">
+            <span>PER</span>
+            <strong id="topPer">--</strong>
+            <small>%</small>
+          </div>
+        </div>
+      </header>
+
+      <section id="tab-dashboard" class="tab-panel active">
+        <div class="grid dashboard-grid">
+          <div class="card span-4">
+            <div class="card-header">
+              <div>
+                <h2>Connection</h2>
+                <p class="muted">Manage device connectivity.</p>
+              </div>
+              <div class="status-pill" id="connectionStatusPill" data-status="disconnected">Disconnected</div>
+            </div>
+            <div class="field">
+              <label for="connectionMode">Mode</label>
+              <select id="connectionMode">
+                <option value="mock">Mock Device</option>
+                <option value="bluetooth" disabled>Bluetooth (Coming soon)</option>
+                <option value="cable" disabled>Cable (Coming soon)</option>
+              </select>
+            </div>
+            <div class="button-row">
+              <button class="btn btn-primary" id="connectBtn">Connect</button>
+              <button class="btn btn-secondary" id="pingBtn">Ping</button>
+            </div>
+            <div class="metrics-row">
+              <div class="metric">
+                <span>Latency</span>
+                <strong id="latencyValue">--</strong>
+                <small>ms</small>
+              </div>
+              <div class="metric">
+                <span>Packet Error Rate</span>
+                <strong id="perValue">--</strong>
+                <small>%</small>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="inline-row">
+              <div>
+                <div class="label">Logging</div>
+                <div class="muted">Status: <span id="loggingStatus">Off</span></div>
+              </div>
+              <button class="btn btn-ghost" id="logToggleBtn">Start Logging</button>
+            </div>
+          </div>
+
+          <div class="card span-8">
+            <div class="card-header">
+              <div>
+                <h2>Live Control</h2>
+                <p class="muted">Tune tremor parameters in real time.</p>
+              </div>
+              <div class="unsaved" id="unsavedIndicator">Unsaved changes</div>
+            </div>
+            <div class="field-group">
+              <div class="field" data-param="freq">
+                <label for="freqRange">Frequency (Hz)</label>
+                <div class="input-row">
+                  <input type="range" id="freqRange" min="3" max="8" step="0.1" />
+                  <input type="number" id="freqNumber" min="3" max="8" step="0.1" />
+                </div>
+              </div>
+              <div class="field" data-param="amp">
+                <label for="ampRange">Amplitude</label>
+                <div class="input-row">
+                  <input type="range" id="ampRange" min="0" max="100" step="1" />
+                  <input type="number" id="ampNumber" min="0" max="100" step="1" />
+                </div>
+              </div>
+              <div class="field" data-param="noise">
+                <label for="noiseRange">Noise</label>
+                <div class="input-row">
+                  <input type="range" id="noiseRange" min="0" max="100" step="1" />
+                  <input type="number" id="noiseNumber" min="0" max="100" step="1" />
+                </div>
+              </div>
+            </div>
+            <div class="toggle-row">
+              <label class="switch">
+                <input type="checkbox" id="enableTremor" />
+                <span class="slider"></span>
+              </label>
+              <div>
+                <div class="label">Enable Tremor</div>
+                <div class="muted">Output signal when active.</div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="btn btn-primary" id="sendBtn">Send to Device</button>
+              <button class="btn btn-danger" id="stopBtn">Stop</button>
+            </div>
+            <div class="meta-row">
+              <span>Last sent: <strong id="lastSent">--</strong></span>
+            </div>
+          </div>
+
+          <div class="card span-12">
+            <div class="card-header">
+              <div>
+                <h2>Visualization</h2>
+                <p class="muted">Amplitude over time.</p>
+              </div>
+              <div class="button-row">
+                <button class="btn btn-secondary" id="freezeBtn">Freeze</button>
+                <button class="btn btn-ghost" id="clearBtn">Clear</button>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="tremorCanvas"></canvas>
+            </div>
+            <div class="readouts">
+              <div class="readout">
+                <span>Estimated Freq</span>
+                <strong id="readoutFreq">--</strong>
+                <small>Hz</small>
+              </div>
+              <div class="readout">
+                <span>RMS Amp</span>
+                <strong id="readoutRms">--</strong>
+              </div>
+              <div class="readout">
+                <span>Noise Level</span>
+                <strong id="readoutNoise">--</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="card span-6">
+            <div class="card-header">
+              <div>
+                <h2>Quick Profile Actions</h2>
+                <p class="muted">Load or capture parameter sets.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="profileSelect">Profile</label>
+              <select id="profileSelect"></select>
+            </div>
+            <div class="button-row">
+              <button class="btn btn-secondary" id="loadProfileBtn">Load</button>
+              <button class="btn btn-primary" id="saveProfileBtn">Save as Profile</button>
+            </div>
+          </div>
+
+          <div class="card span-6">
+            <div class="card-header">
+              <div>
+                <h2>System Health</h2>
+                <p class="muted">Quick glance at device telemetry.</p>
+              </div>
+            </div>
+            <div class="health-grid">
+              <div class="health-item">
+                <span>Battery</span>
+                <strong id="healthBattery">92%</strong>
+              </div>
+              <div class="health-item">
+                <span>Motor Temp</span>
+                <strong id="healthTemp">37 C</strong>
+              </div>
+              <div class="health-item">
+                <span>Firmware</span>
+                <strong id="healthFirmware">v1.4.2</strong>
+              </div>
+              <div class="health-item">
+                <span>Mode</span>
+                <strong id="healthMode">Mock</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-profiles" class="tab-panel hidden">
+        <div class="section-header">
+          <div>
+            <h2 class="sr-only">Profiles</h2>
+            <p class="muted">Manage saved tremor presets.</p>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-secondary" id="importProfilesBtn">Import</button>
+            <button class="btn btn-ghost" id="exportProfilesBtn">Export</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="empty-state hidden" id="profilesEmpty">
+            <h3>No profiles yet</h3>
+            <p>Create a profile from the dashboard to get started.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="profilesTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Updated</th>
+                  <th>Freq</th>
+                  <th>Amp</th>
+                  <th>Noise</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-sequences" class="tab-panel hidden">
+        <div class="section-header">
+          <div>
+            <h2 class="sr-only">Sequences</h2>
+            <p class="muted">Design step-based tremor routines.</p>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-secondary" id="newSequenceBtn">New Sequence</button>
+          </div>
+        </div>
+        <div class="grid sequences-grid">
+          <div class="card span-4">
+            <div class="card-header">
+              <div>
+                <h3>Sequence Library</h3>
+                <p class="muted">Select a sequence to edit.</p>
+              </div>
+            </div>
+            <div class="list" id="sequenceList"></div>
+            <div class="empty-state hidden" id="sequencesEmpty">
+              <h3>No sequences</h3>
+              <p>Create a new sequence to begin.</p>
+            </div>
+          </div>
+          <div class="card span-8" id="sequenceEditor">
+            <div class="empty-state">
+              <h3>No sequence selected</h3>
+              <p>Choose a sequence from the library to edit steps.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-sessions" class="tab-panel hidden">
+        <div class="section-header">
+          <div>
+            <h2 class="sr-only">Sessions</h2>
+            <p class="muted">Review and export logging sessions.</p>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-primary" id="sessionsLogBtn">Start Logging</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="empty-state hidden" id="sessionsEmpty">
+            <h3>No sessions recorded</h3>
+            <p>Start logging to capture data.</p>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="sessionsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Start</th>
+                  <th>Duration</th>
+                  <th>Sample Count</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab-panel hidden">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="sr-only">Settings</h2>
+              <p class="muted">Configure platform preferences.</p>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <div>
+                <h3>Auto Connect</h3>
+                <p class="muted">Connect on launch when using Mock Device.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div>
+                <h3>Live Sync</h3>
+                <p class="muted">Apply parameter changes immediately.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div>
+                <h3>Alerts</h3>
+                <p class="muted">Notify on connection drops.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="profileModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="profileModalTitle">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="profileModalTitle">Save as Profile</h3>
+        <button class="icon-btn" data-close-modal aria-label="Close">
+          <span class="icon">x</span>
+        </button>
+      </div>
+      <form id="profileForm">
+        <div class="field">
+          <label for="profileName">Profile name</label>
+          <input type="text" id="profileName" name="profileName" required />
+        </div>
+        <div class="button-row">
+          <button type="submit" class="btn btn-primary">Save Profile</button>
+          <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="sessionModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sessionModalTitle">
+    <div class="modal-content large">
+      <div class="modal-header">
+        <h3 id="sessionModalTitle">Session Details</h3>
+        <button class="icon-btn" data-close-modal aria-label="Close">
+          <span class="icon">x</span>
+        </button>
+      </div>
+      <div class="session-detail">
+        <div class="summary" id="sessionSummary"></div>
+        <div class="session-chart">
+          <canvas id="sessionCanvas"></canvas>
+        </div>
+        <div class="button-row">
+          <button class="btn btn-secondary" id="exportCsvBtn">Export CSV</button>
+          <button class="btn btn-secondary" id="exportJsonBtn">Export JSON</button>
+          <button class="btn btn-danger" id="deleteSessionBtn">Delete Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
