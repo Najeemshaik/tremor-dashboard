@@ -9,6 +9,19 @@ const STORAGE_KEY = "tremor-sim-platform";
 const THEME_KEY = "tremor-theme";
 const SIDEBAR_COLLAPSED_KEY = "tremor-sidebar-collapsed";
 
+// Update these UUIDs to match your device's BLE service/characteristics.
+const BLE_CONFIG = {
+  deviceNamePrefix: "Tremor",
+  serviceUUID: "0000fff0-0000-1000-8000-00805f9b34fb",
+  controlCharUUID: "0000fff1-0000-1000-8000-00805f9b34fb",
+  telemetryCharUUID: "0000fff2-0000-1000-8000-00805f9b34fb"
+};
+
+const LATENCY_WARNING_MS = 100;
+const LATENCY_ALERT_MS = 300;
+const LATENCY_TEST_INTERVAL_MS = 1000;
+const LATENCY_TEST_SAMPLE_WINDOW = 5;
+
 // Seed data for initial profiles
 const seedProfiles = [
   { id: "p1", name: "PD Rest Tremor", updated: "2024-03-14 09:12", freq: 4.5, amp: 45, noise: 8 },
@@ -38,7 +51,23 @@ const state = {
     mode: "mock",
     status: "disconnected",
     latency: null,
-    per: null
+    per: null,
+    device: null,
+    server: null,
+    controlChar: null,
+    telemetryChar: null,
+    lastPingAt: null,
+    lastPingSeq: 0,
+    perStats: {
+      lastSeq: null,
+      received: 0,
+      dropped: 0
+    },
+    latencyTest: {
+      active: false,
+      samples: [],
+      pendingSeq: null
+    }
   },
   params: {
     freq: 4.5,
@@ -56,6 +85,7 @@ const state = {
   profiles: [],
   sequences: [],
   sessions: [],
+  sequenceSync: {},
   selectedSequenceId: null,
   logging: false,
   activeSession: null,
@@ -298,6 +328,8 @@ function bindElements() {
   elements.connectionMode = $("#connectionMode");
   elements.connectBtn = $("#connectBtn");
   elements.pingBtn = $("#pingBtn");
+  elements.latencyTestBtn = $("#latencyTestBtn");
+  elements.latencyWarning = $("#latencyWarning");
   elements.connectionStatusPill = $("#connectionStatusPill");
   elements.latencyValue = $("#latencyValue");
   elements.perValue = $("#perValue");
@@ -446,9 +478,87 @@ function updateConnectionUI() {
   elements.topPer.textContent = formatNumber(per, 2);
 
   if (elements.healthMode) {
-    elements.healthMode.textContent =
-      state.connection.mode === "mock" ? "Simulation" : capitalize(state.connection.mode);
+    if (state.connection.mode === "mock") {
+      elements.healthMode.textContent = "Simulation";
+    } else if (state.connection.mode === "cable") {
+      elements.healthMode.textContent = "USB Cable (Stub)";
+    } else {
+      elements.healthMode.textContent = capitalize(state.connection.mode);
+    }
   }
+
+  updateLatencyTestUI();
+  updateLatencyWarning();
+  updateDeviceSyncUI();
+}
+
+function updateBluetoothOptionState() {
+  const option = elements.connectionMode?.querySelector('option[value="bluetooth"]');
+  if (!option) return;
+  if (!isBluetoothAvailable()) {
+    option.disabled = true;
+    option.textContent = "Bluetooth (Unavailable)";
+    if (elements.connectionMode.value === "bluetooth") {
+      elements.connectionMode.value = "mock";
+      state.connection.mode = "mock";
+    }
+  } else {
+    option.disabled = false;
+    option.textContent = "Bluetooth";
+  }
+}
+
+function updateLatencyWarning() {
+  if (!elements.latencyWarning) return;
+  const latency = state.connection.latency;
+  const isConnected = state.connection.status === "connected";
+  if (!isConnected || latency === null || latency === undefined) {
+    elements.latencyWarning.classList.add("hidden");
+    elements.latencyWarning.classList.remove("warning-text", "alert-text");
+    elements.latencyWarning.classList.add("warning-text");
+    return;
+  }
+
+  if (latency >= LATENCY_ALERT_MS) {
+    elements.latencyWarning.textContent = `High latency detected (${Math.round(latency)} ms).`;
+    elements.latencyWarning.classList.remove("hidden", "warning-text");
+    elements.latencyWarning.classList.add("alert-text");
+    return;
+  }
+
+  if (latency >= LATENCY_WARNING_MS) {
+    elements.latencyWarning.textContent = `Latency above target (${Math.round(latency)} ms).`;
+    elements.latencyWarning.classList.remove("hidden", "alert-text");
+    elements.latencyWarning.classList.add("warning-text");
+    return;
+  }
+
+  elements.latencyWarning.classList.add("hidden");
+  elements.latencyWarning.classList.remove("alert-text");
+  elements.latencyWarning.classList.add("warning-text");
+}
+
+function updateLatencyTestUI() {
+  if (!elements.latencyTestBtn) return;
+  const canTest =
+    state.connection.mode === "bluetooth" &&
+    state.connection.status === "connected" &&
+    isBluetoothAvailable();
+  elements.latencyTestBtn.disabled = !canTest;
+  elements.latencyTestBtn.textContent = state.connection.latencyTest.active
+    ? "Stop Latency Test"
+    : "Start Latency Test";
+}
+
+function updateDeviceSyncUI() {
+  if (!elements.sequenceEditor) return;
+  const disabled =
+    state.connection.mode !== "bluetooth" || state.connection.status !== "connected";
+  elements.sequenceEditor
+    .querySelectorAll('[data-action="device-sync"], [data-action="device-play"], [data-action="device-stop"]')
+    .forEach((button) => {
+      button.disabled = disabled;
+    });
 }
 
 function statusColor(status) {
@@ -462,26 +572,394 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+// Bluetooth helpers
+const bleTextEncoder = new TextEncoder();
+const bleTextDecoder = new TextDecoder("utf-8");
+
+function isBluetoothAvailable() {
+  return Boolean(window.isSecureContext && navigator.bluetooth);
+}
+
+function buildBluetoothRequestOptions() {
+  const options = { optionalServices: [BLE_CONFIG.serviceUUID] };
+  if (BLE_CONFIG.deviceNamePrefix) {
+    options.filters = [{ namePrefix: BLE_CONFIG.deviceNamePrefix }];
+  } else {
+    options.acceptAllDevices = true;
+  }
+  return options;
+}
+
+function resetConnectionMetrics() {
+  state.connection.latency = null;
+  state.connection.per = null;
+  resetPerStats();
+  resetLatencyTestState();
+}
+
+function resetPerStats() {
+  state.connection.perStats = {
+    lastSeq: null,
+    received: 0,
+    dropped: 0
+  };
+}
+
+function resetLatencyTestState() {
+  state.connection.lastPingAt = null;
+  state.connection.lastPingSeq = 0;
+  state.connection.latencyTest.active = false;
+  state.connection.latencyTest.samples = [];
+  state.connection.latencyTest.pendingSeq = null;
+}
+
+function clearBluetoothState() {
+  if (state.connection.telemetryChar) {
+    state.connection.telemetryChar.removeEventListener("characteristicvaluechanged", handleBluetoothTelemetry);
+  }
+  state.connection.device = null;
+  state.connection.server = null;
+  state.connection.controlChar = null;
+  state.connection.telemetryChar = null;
+  state.connection.lastPingAt = null;
+  state.connection.lastPingSeq = 0;
+  state.connection.latencyTest.pendingSeq = null;
+}
+
+function handleBluetoothDisconnect() {
+  stopLatencyTest();
+  clearBluetoothState();
+  state.connection.status = "disconnected";
+  resetConnectionMetrics();
+  updateConnectionUI();
+}
+
+function isBluetoothStreaming() {
+  return (
+    state.connection.mode === "bluetooth" &&
+    state.connection.status === "connected" &&
+    state.connection.telemetryChar
+  );
+}
+
+function ingestSample(sample) {
+  state.visualization.lastSample = sample;
+  state.visualization.buffer.push(sample);
+  if (state.visualization.buffer.length > 300) {
+    state.visualization.buffer.shift();
+  }
+}
+
+function parseTelemetryValue(dataView) {
+  if (!dataView) return {};
+  const bytes = new Uint8Array(dataView.buffer, dataView.byteOffset, dataView.byteLength);
+  const text = bleTextDecoder.decode(bytes).trim();
+  if (text.startsWith("{")) {
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      return {};
+    }
+  }
+
+  if (dataView.byteLength >= 4) {
+    const floatSample = dataView.getFloat32(0, true);
+    if (Number.isFinite(floatSample)) {
+      return { sample: floatSample };
+    }
+  }
+
+  if (dataView.byteLength >= 2) {
+    return { sample: dataView.getInt16(0, true) };
+  }
+
+  return {};
+}
+
+function updatePerFromSeq(seq) {
+  if (!Number.isFinite(seq)) return;
+  const stats = state.connection.perStats;
+
+  if (stats.lastSeq !== null && seq <= stats.lastSeq) {
+    stats.lastSeq = seq;
+    stats.received = 1;
+    stats.dropped = 0;
+    state.connection.per = 0;
+    return;
+  }
+
+  if (stats.lastSeq !== null && seq > stats.lastSeq + 1) {
+    stats.dropped += seq - stats.lastSeq - 1;
+  }
+
+  stats.received += 1;
+  stats.lastSeq = seq;
+  const total = stats.received + stats.dropped;
+  state.connection.per = total > 0 ? Number(((stats.dropped / total) * 100).toFixed(2)) : 0;
+}
+
+function recordLatencySample(latency) {
+  if (!state.connection.latencyTest.active) return;
+  const samples = state.connection.latencyTest.samples;
+  samples.push(latency);
+  if (samples.length > LATENCY_TEST_SAMPLE_WINDOW) {
+    samples.shift();
+  }
+}
+
+function handleBluetoothTelemetry(event) {
+  const payload = parseTelemetryValue(event.target.value);
+  if (Array.isArray(payload.samples)) {
+    payload.samples.forEach((sample) => {
+      if (Number.isFinite(sample)) ingestSample(sample);
+    });
+  }
+  if (Number.isFinite(payload.sample)) {
+    ingestSample(payload.sample);
+  }
+
+  const seq = Number.isFinite(payload.seq)
+    ? payload.seq
+    : Number.isFinite(payload.sequence)
+      ? payload.sequence
+      : null;
+  if (Number.isFinite(seq)) {
+    updatePerFromSeq(seq);
+  }
+
+  const isPong = payload.type === "pong" || payload.pong === true;
+  if (isPong) {
+    if (Number.isFinite(payload.ts)) {
+      state.connection.latency = Date.now() - payload.ts;
+    } else if (
+      state.connection.lastPingAt &&
+      (!Number.isFinite(seq) || seq === state.connection.lastPingSeq)
+    ) {
+      state.connection.latency = Date.now() - state.connection.lastPingAt;
+    }
+    state.connection.latencyTest.pendingSeq = null;
+    recordLatencySample(state.connection.latency);
+  }
+
+  if (Number.isFinite(payload.latency)) {
+    state.connection.latency = payload.latency;
+    recordLatencySample(payload.latency);
+  }
+  if (Number.isFinite(payload.per)) {
+    state.connection.per = payload.per;
+  }
+  if (payload.latency !== undefined || payload.per !== undefined || isPong || Number.isFinite(seq)) {
+    updateConnectionUI();
+  }
+}
+
+async function writeCharacteristic(characteristic, data) {
+  if (characteristic.writeValueWithResponse) {
+    await characteristic.writeValueWithResponse(data);
+  } else {
+    await characteristic.writeValue(data);
+  }
+}
+
+function encodeControlPayload(payload) {
+  return bleTextEncoder.encode(JSON.stringify(payload));
+}
+
+async function sendBluetoothCommand(payload) {
+  if (state.connection.mode !== "bluetooth" || state.connection.status !== "connected") return;
+  if (!state.connection.controlChar) return;
+  try {
+    const data = encodeControlPayload(payload);
+    await writeCharacteristic(state.connection.controlChar, data);
+  } catch (error) {
+    console.error("Bluetooth write failed", error);
+    handleBluetoothDisconnect();
+  }
+}
+
+function canRunLatencyTest() {
+  return (
+    state.connection.mode === "bluetooth" &&
+    state.connection.status === "connected" &&
+    isBluetoothAvailable()
+  );
+}
+
+function scheduleLatencyTimeout(seq) {
+  if (latencyTestTimeout) {
+    clearTimeout(latencyTestTimeout);
+  }
+  latencyTestTimeout = window.setTimeout(() => {
+    if (!state.connection.latencyTest.active) return;
+    if (state.connection.latencyTest.pendingSeq !== seq) return;
+    if (!elements.latencyWarning) return;
+    elements.latencyWarning.textContent = "Latency test timed out — no response from device.";
+    elements.latencyWarning.classList.remove("hidden", "warning-text");
+    elements.latencyWarning.classList.add("alert-text");
+  }, Math.max(LATENCY_ALERT_MS, LATENCY_TEST_INTERVAL_MS));
+}
+
+async function runLatencyTestPing() {
+  if (!canRunLatencyTest() || latencyTestInFlight) return;
+  latencyTestInFlight = true;
+  try {
+    const seq = state.connection.lastPingSeq + 1;
+    state.connection.lastPingSeq = seq;
+    state.connection.lastPingAt = Date.now();
+    state.connection.latencyTest.pendingSeq = seq;
+    await sendBluetoothCommand({ type: "ping", ts: state.connection.lastPingAt, seq });
+    scheduleLatencyTimeout(seq);
+  } finally {
+    latencyTestInFlight = false;
+  }
+}
+
+function startLatencyTest() {
+  if (state.connection.latencyTest.active) return;
+  if (!canRunLatencyTest()) {
+    window.alert("Connect to a Bluetooth device before starting a latency test.");
+    return;
+  }
+  state.connection.latencyTest.active = true;
+  state.connection.latencyTest.samples = [];
+  runLatencyTestPing();
+  latencyTestTimer = window.setInterval(runLatencyTestPing, LATENCY_TEST_INTERVAL_MS);
+  updateLatencyTestUI();
+}
+
+function stopLatencyTest() {
+  state.connection.latencyTest.active = false;
+  state.connection.latencyTest.pendingSeq = null;
+  if (latencyTestTimer) {
+    clearInterval(latencyTestTimer);
+    latencyTestTimer = null;
+  }
+  if (latencyTestTimeout) {
+    clearTimeout(latencyTestTimeout);
+    latencyTestTimeout = null;
+  }
+  updateLatencyTestUI();
+}
+
+function toggleLatencyTest() {
+  if (state.connection.latencyTest.active) {
+    stopLatencyTest();
+  } else {
+    startLatencyTest();
+  }
+}
+
+async function connectBluetooth() {
+  if (!isBluetoothAvailable()) {
+    window.alert("Bluetooth is unavailable. Use a secure context (HTTPS) and a compatible browser.");
+    return;
+  }
+
+  state.connection.status = "connecting";
+  updateConnectionUI();
+
+  try {
+    const device = await navigator.bluetooth.requestDevice(buildBluetoothRequestOptions());
+    device.addEventListener("gattserverdisconnected", handleBluetoothDisconnect);
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(BLE_CONFIG.serviceUUID);
+    const controlChar = await service.getCharacteristic(BLE_CONFIG.controlCharUUID);
+    let telemetryChar = null;
+    try {
+      telemetryChar = await service.getCharacteristic(BLE_CONFIG.telemetryCharUUID);
+    } catch (error) {
+      telemetryChar = null;
+    }
+
+    if (telemetryChar && telemetryChar.properties.notify) {
+      await telemetryChar.startNotifications();
+      telemetryChar.addEventListener("characteristicvaluechanged", handleBluetoothTelemetry);
+    }
+
+    state.connection.device = device;
+    state.connection.server = server;
+    state.connection.controlChar = controlChar;
+    state.connection.telemetryChar = telemetryChar;
+    state.connection.status = "connected";
+    resetConnectionMetrics();
+    updateConnectionUI();
+  } catch (error) {
+    console.error("Bluetooth connection failed", error);
+    handleBluetoothDisconnect();
+  }
+}
+
+async function disconnectBluetooth() {
+  if (state.connection.device && state.connection.device.gatt?.connected) {
+    state.connection.device.gatt.disconnect();
+  } else {
+    handleBluetoothDisconnect();
+  }
+}
+
 // Connection handling
 let connectTimer = null;
 let metricsTimer = null;
+let latencyTestTimer = null;
+let latencyTestTimeout = null;
+let latencyTestInFlight = false;
 
 function updateMetrics() {
+  if (state.connection.mode !== "mock") return;
   state.connection.latency = Math.round(randomBetween(10, 80));
   state.connection.per = Number(randomBetween(0, 0.5).toFixed(2));
   updateConnectionUI();
 }
 
-function handleConnectClick() {
-  if (state.connection.status === "connected") {
-    state.connection.status = "disconnected";
-    state.connection.latency = null;
-    state.connection.per = null;
-    updateConnectionUI();
-    if (metricsTimer) {
-      clearInterval(metricsTimer);
-      metricsTimer = null;
+function stopMockTimers() {
+  if (connectTimer) {
+    clearTimeout(connectTimer);
+    connectTimer = null;
+  }
+  if (metricsTimer) {
+    clearInterval(metricsTimer);
+    metricsTimer = null;
+  }
+}
+
+function disconnectMock() {
+  stopMockTimers();
+  state.connection.status = "disconnected";
+  resetConnectionMetrics();
+  updateConnectionUI();
+}
+
+function disconnectCable() {
+  state.connection.status = "disconnected";
+  resetConnectionMetrics();
+  updateConnectionUI();
+}
+
+function connectCable() {
+  window.alert("USB Cable mode is a stub. Connect logic is not implemented yet.");
+  state.connection.status = "disconnected";
+  resetConnectionMetrics();
+  updateConnectionUI();
+}
+
+async function handleConnectClick() {
+  if (state.connection.mode === "bluetooth") {
+    if (state.connection.status === "connected") {
+      await disconnectBluetooth();
+      return;
     }
+    if (state.connection.status === "connecting") return;
+    await connectBluetooth();
+    return;
+  }
+  if (state.connection.mode === "cable") {
+    connectCable();
+    return;
+  }
+
+  if (state.connection.status === "connected") {
+    disconnectMock();
     return;
   }
   if (state.connection.status === "connecting") {
@@ -489,9 +967,7 @@ function handleConnectClick() {
   }
   state.connection.status = "connecting";
   updateConnectionUI();
-  if (connectTimer) {
-    clearTimeout(connectTimer);
-  }
+  stopMockTimers();
   connectTimer = window.setTimeout(() => {
     state.connection.status = "connected";
     updateMetrics();
@@ -504,6 +980,46 @@ function handleConnectClick() {
       }, 2000);
     }
   }, 800);
+}
+
+async function handlePingClick() {
+  if (state.connection.mode === "bluetooth") {
+    if (state.connection.status !== "connected") return;
+    const start = performance.now();
+    const seq = state.connection.lastPingSeq + 1;
+    state.connection.lastPingSeq = seq;
+    state.connection.lastPingAt = Date.now();
+    state.connection.latencyTest.pendingSeq = seq;
+    await sendBluetoothCommand({ type: "ping", ts: state.connection.lastPingAt, seq });
+    scheduleLatencyTimeout(seq);
+    state.connection.latency = Math.round(performance.now() - start);
+    if (state.connection.per === null) {
+      state.connection.per = 0;
+    }
+    updateConnectionUI();
+    return;
+  }
+  if (state.connection.mode === "cable") {
+    window.alert("USB Cable mode is a stub. Ping is not available.");
+    return;
+  }
+  updateMetrics();
+}
+
+async function handleConnectionModeChange(event) {
+  const nextMode = event.target.value;
+  stopLatencyTest();
+  if (state.connection.mode === "bluetooth") {
+    await disconnectBluetooth();
+  } else if (state.connection.mode === "mock") {
+    disconnectMock();
+  } else if (state.connection.mode === "cable") {
+    disconnectCable();
+  }
+  state.connection.mode = nextMode;
+  state.connection.status = "disconnected";
+  resetConnectionMetrics();
+  updateConnectionUI();
 }
 
 // Logging/Session recording
@@ -663,12 +1179,14 @@ function handleSend() {
   state.lastSentAt = now.toISOString().slice(0, 19).replace("T", " ");
   updateParamUI();
   updateLastSentUI();
+  void sendBluetoothCommand({ type: "params", params: { ...state.params } });
 }
 
 function handleStop() {
   state.params.enabled = false;
   state.params.amp = 0;
   updateParamUI();
+  void sendBluetoothCommand({ type: "stop" });
 }
 
 // Visualization
@@ -710,6 +1228,7 @@ function animate(timestamp) {
 
 function updateSignal(delta) {
   state.visualization.t += delta;
+  if (isBluetoothStreaming()) return;
   const freq = state.params.freq;
   const amp = state.params.enabled ? state.params.amp : 0;
   const noise = state.params.noise;
@@ -1088,6 +1607,13 @@ function renderSequenceEditor() {
     statusClass = playback.playing ? "recording" : "";
   }
 
+  const syncInfo = state.sequenceSync[sequence.id];
+  const syncText = syncInfo ? `Synced ${syncInfo.syncedAt}` : "Not synced";
+  const deviceButtonsDisabled =
+    state.connection.mode !== "bluetooth" || state.connection.status !== "connected"
+      ? "disabled"
+      : "";
+
   elements.sequenceEditor.innerHTML = `
     <div class="sequence-editor">
       <div class="field">
@@ -1129,6 +1655,17 @@ function renderSequenceEditor() {
             Pause
           </button>
           <button class="btn btn-ghost" data-action="seq-stop">Stop</button>
+        </div>
+      </div>
+      <div class="sequence-status">
+        <div>
+          <div class="label">Device Sync</div>
+          <div class="muted" id="deviceSyncStatus">${syncText}</div>
+        </div>
+        <div class="button-row" style="margin-top: 0;">
+          <button class="btn btn-secondary" data-action="device-sync" ${deviceButtonsDisabled}>Sync to Device</button>
+          <button class="btn btn-primary" data-action="device-play" ${deviceButtonsDisabled}>Play on Device</button>
+          <button class="btn btn-ghost" data-action="device-stop" ${deviceButtonsDisabled}>Stop Device</button>
         </div>
       </div>
     </div>
@@ -1381,6 +1918,15 @@ function bindSequenceEvents() {
     if (action === "seq-stop") {
       stopSequencePlayback();
     }
+    if (action === "device-sync") {
+      syncSequenceToDevice(sequence);
+    }
+    if (action === "device-play") {
+      playSequenceOnDevice(sequence);
+    }
+    if (action === "device-stop") {
+      stopSequenceOnDevice();
+    }
     persist();
     renderSequences();
   });
@@ -1442,6 +1988,44 @@ function applyStep(step) {
   state.params.noise = step.noise;
   state.params.enabled = true;
   updateParamUI();
+}
+
+async function syncSequenceToDevice(sequence) {
+  if (!sequence) return;
+  if (state.connection.mode !== "bluetooth" || state.connection.status !== "connected") {
+    window.alert("Connect to a Bluetooth device before syncing sequences.");
+    return;
+  }
+  await sendBluetoothCommand({
+    type: "sequence-save",
+    sequence: {
+      id: sequence.id,
+      name: sequence.name,
+      steps: sequence.steps
+    }
+  });
+  const now = new Date();
+  state.sequenceSync[sequence.id] = {
+    syncedAt: now.toISOString().slice(0, 19).replace("T", " ")
+  };
+  renderSequenceEditor();
+}
+
+async function playSequenceOnDevice(sequence) {
+  if (!sequence) return;
+  if (state.connection.mode !== "bluetooth" || state.connection.status !== "connected") {
+    window.alert("Connect to a Bluetooth device before playing sequences.");
+    return;
+  }
+  await sendBluetoothCommand({ type: "sequence-play", id: sequence.id });
+}
+
+async function stopSequenceOnDevice() {
+  if (state.connection.mode !== "bluetooth" || state.connection.status !== "connected") {
+    window.alert("Connect to a Bluetooth device before stopping sequences.");
+    return;
+  }
+  await sendBluetoothCommand({ type: "sequence-stop" });
 }
 
 function bindSessionEvents() {
@@ -1627,13 +2211,14 @@ function init() {
   // Theme toggle
   elements.themeToggle.addEventListener("click", toggleTheme);
 
-  elements.connectionMode.addEventListener("change", (event) => {
-    state.connection.mode = event.target.value;
-    updateConnectionUI();
-  });
+  updateBluetoothOptionState();
+  elements.connectionMode.addEventListener("change", handleConnectionModeChange);
 
   elements.connectBtn.addEventListener("click", handleConnectClick);
-  elements.pingBtn.addEventListener("click", updateMetrics);
+  elements.pingBtn.addEventListener("click", handlePingClick);
+  if (elements.latencyTestBtn) {
+    elements.latencyTestBtn.addEventListener("click", toggleLatencyTest);
+  }
 
   elements.logToggleBtn.addEventListener("click", () => setLogging(!state.logging));
   elements.sidebarLogBtn.addEventListener("click", () => setLogging(!state.logging));

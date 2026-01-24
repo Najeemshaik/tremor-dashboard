@@ -165,8 +165,8 @@
               <label for="connectionMode">Connection Mode</label>
               <select id="connectionMode">
                 <option value="mock">Simulation Mode</option>
-                <option value="bluetooth" disabled>Bluetooth (Coming soon)</option>
-                <option value="cable" disabled>USB Cable (Coming soon)</option>
+                <option value="bluetooth">Bluetooth</option>
+                <option value="cable">USB Cable (Stub)</option>
               </select>
             </div>
             <div class="button-row">
@@ -191,6 +191,10 @@
                 <small>%</small>
               </div>
             </div>
+            <div class="button-row">
+              <button class="btn btn-ghost" id="latencyTestBtn">Start Latency Test</button>
+            </div>
+            <div class="muted warning-text hidden" id="latencyWarning">Latency is within target.</div>
             <div class="divider"></div>
             <div class="inline-row">
               <div>

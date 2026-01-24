@@ -932,6 +932,16 @@ a:hover {
   color: var(--danger-dark);
 }
 
+.warning-text {
+  color: var(--warning-dark);
+  font-weight: 600;
+}
+
+.alert-text {
+  color: var(--danger-dark);
+  font-weight: 600;
+}
+
 @keyframes pulse-dot {
   0%, 100% { box-shadow: 0 0 8px currentColor; }
   50% { box-shadow: 0 0 16px currentColor; }
