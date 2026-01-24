@@ -8,6 +8,8 @@
 const STORAGE_KEY = "tremor-sim-platform";
 const THEME_KEY = "tremor-theme";
 const SIDEBAR_COLLAPSED_KEY = "tremor-sidebar-collapsed";
+const CONTRAST_KEY = "tremor-contrast";
+const SIM_SAMPLE_RATE = 60;
 
 // Seed data for initial profiles
 const seedProfiles = [
@@ -65,7 +67,15 @@ const state = {
     freeze: false,
     lastSample: 0,
     mouseX: null,
-    mouseY: null
+    mouseY: null,
+    keyboardIndex: null,
+    usingKeyboard: false,
+    sampleRate: SIM_SAMPLE_RATE,
+    freezeSpectrum: false,
+    gain: 1,
+    autoScale: true,
+    windowSeconds: 5,
+    snapshot: null
   },
   playback: {
     intervalId: null,
@@ -76,17 +86,27 @@ const state = {
   },
   theme: "light",
   sidebarCollapsed: false,
+  contrast: "normal",
+  metricHistory: {
+    dominantFreq: []
+  },
   clinicalMetrics: {
     frequency: 0,
     rms: 0,
     power: 0,
     regularity: 0,
     updrs: 0,
-    snr: 0
+    snr: 0,
+    peakToPeak: 0,
+    bandwidth: 0,
+    stability: 0,
+    harmonic: 0
   }
 };
 
 const elements = {};
+let activeModal = null;
+let lastFocusedElement = null;
 
 // Helper functions
 function $(selector, root = document) {
@@ -167,6 +187,84 @@ function calculateSummary(samples) {
   return { avg, rms, peak, noise };
 }
 
+function calculateWindowedRMS(samples, windowSize) {
+  if (!samples || samples.length === 0) return 0;
+  const start = Math.max(0, samples.length - windowSize);
+  let sumSq = 0;
+  let count = 0;
+  for (let i = start; i < samples.length; i += 1) {
+    const v = samples[i];
+    sumSq += v * v;
+    count += 1;
+  }
+  if (count === 0) return 0;
+  return Math.sqrt(sumSq / count);
+}
+
+function calculateSpectrum(samples, sampleRate) {
+  const N = 256;
+  if (!samples || samples.length < N) {
+    return [];
+  }
+  const start = samples.length - N;
+  const windowed = new Array(N);
+  for (let i = 0; i < N; i += 1) {
+    const w = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (N - 1)));
+    windowed[i] = samples[start + i] * w;
+  }
+
+  const spectrum = [];
+  for (let k = 1; k < N / 2; k += 1) {
+    const freq = (k * sampleRate) / N;
+    let re = 0;
+    let im = 0;
+    const angleStep = (2 * Math.PI * k) / N;
+    for (let n = 0; n < N; n += 1) {
+      const angle = angleStep * n;
+      re += windowed[n] * Math.cos(angle);
+      im -= windowed[n] * Math.sin(angle);
+    }
+    const mag = Math.sqrt(re * re + im * im);
+    spectrum.push({ freq, mag });
+  }
+  return spectrum;
+}
+
+function calculateDominantFrequency(samples, sampleRate) {
+  const N = 256;
+  if (!samples || samples.length < N) {
+    return 0;
+  }
+  const start = samples.length - N;
+  const windowed = new Array(N);
+  for (let i = 0; i < N; i += 1) {
+    const w = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (N - 1)));
+    windowed[i] = samples[start + i] * w;
+  }
+
+  let maxMag = 0;
+  let maxBin = 0;
+  for (let k = 1; k < N / 2; k += 1) {
+    const freq = (k * sampleRate) / N;
+    if (freq < 3 || freq > 8) continue;
+    let re = 0;
+    let im = 0;
+    const angleStep = (2 * Math.PI * k) / N;
+    for (let n = 0; n < N; n += 1) {
+      const angle = angleStep * n;
+      re += windowed[n] * Math.cos(angle);
+      im -= windowed[n] * Math.sin(angle);
+    }
+    const mag = Math.sqrt(re * re + im * im);
+    if (mag > maxMag) {
+      maxMag = mag;
+      maxBin = k;
+    }
+  }
+
+  return (maxBin * sampleRate) / N;
+}
+
 // Theme management
 function initTheme() {
   const savedTheme = window.localStorage.getItem(THEME_KEY);
@@ -179,6 +277,14 @@ function initTheme() {
   }
 
   applyTheme();
+}
+
+function initContrast() {
+  const savedContrast = window.localStorage.getItem(CONTRAST_KEY);
+  if (savedContrast === "high") {
+    state.contrast = "high";
+  }
+  applyContrast();
 }
 
 function applyTheme() {
@@ -203,6 +309,20 @@ function applyTheme() {
   }
 
   window.localStorage.setItem(THEME_KEY, state.theme);
+}
+
+function applyContrast() {
+  if (state.contrast === "high") {
+    document.documentElement.setAttribute("data-contrast", "high");
+  } else {
+    document.documentElement.removeAttribute("data-contrast");
+  }
+
+  if (elements.settingHighContrast) {
+    elements.settingHighContrast.checked = state.contrast === "high";
+  }
+
+  window.localStorage.setItem(CONTRAST_KEY, state.contrast);
 }
 
 function toggleTheme() {
@@ -243,6 +363,9 @@ function applySidebarCollapse() {
       main.style.marginLeft = "var(--sidebar-width)";
     }
   }
+  if (elements.sidebarToggle) {
+    elements.sidebarToggle.setAttribute("aria-pressed", state.sidebarCollapsed ? "true" : "false");
+  }
   window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, state.sidebarCollapsed);
 }
 
@@ -281,6 +404,7 @@ function persist() {
 
 // DOM element binding
 function bindElements() {
+  elements.app = $(".app");
   elements.tabs = $$(".nav-item");
   elements.panels = $$(".tab-panel");
   elements.pageTitle = $("#pageTitle");
@@ -324,6 +448,15 @@ function bindElements() {
   elements.tremorCanvas = $("#tremorCanvas");
   elements.chartContainer = $("#chartContainer");
   elements.chartTooltip = $("#chartTooltip");
+  elements.chartLive = $("#chartLive");
+  elements.spectrumCanvas = $("#spectrumCanvas");
+  elements.sampleRateValue = $("#sampleRateValue");
+  elements.spectrumFreezeBtn = $("#spectrumFreezeBtn");
+  elements.windowRange = $("#windowRange");
+  elements.windowValue = $("#windowValue");
+  elements.gainRange = $("#gainRange");
+  elements.gainValue = $("#gainValue");
+  elements.snapshotBtn = $("#snapshotBtn");
 
   // Clinical metrics
   elements.metricFrequency = $("#metricFrequency");
@@ -332,6 +465,10 @@ function bindElements() {
   elements.metricRegularity = $("#metricRegularity");
   elements.metricUPDRS = $("#metricUPDRS");
   elements.metricSNR = $("#metricSNR");
+  elements.metricPeakToPeak = $("#metricPeakToPeak");
+  elements.metricBandwidth = $("#metricBandwidth");
+  elements.metricStability = $("#metricStability");
+  elements.metricHarmonic = $("#metricHarmonic");
 
   // Metric indicators
   elements.freqIndicator = $("#freqIndicator");
@@ -340,6 +477,10 @@ function bindElements() {
   elements.regularityIndicator = $("#regularityIndicator");
   elements.updrsIndicator = $("#updrsIndicator");
   elements.snrIndicator = $("#snrIndicator");
+  elements.peakToPeakIndicator = $("#peakToPeakIndicator");
+  elements.bandwidthIndicator = $("#bandwidthIndicator");
+  elements.stabilityIndicator = $("#stabilityIndicator");
+  elements.harmonicIndicator = $("#harmonicIndicator");
 
   elements.profileSelect = $("#profileSelect");
   elements.loadProfileBtn = $("#loadProfileBtn");
@@ -370,28 +511,65 @@ function bindElements() {
   elements.exportJsonBtn = $("#exportJsonBtn");
 
   elements.settingDarkMode = $("#settingDarkMode");
+  elements.settingHighContrast = $("#settingHighContrast");
 }
 
 // Tab navigation
 function initTabs() {
-  elements.tabs.forEach((tab) => {
+  elements.tabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
-      elements.tabs.forEach((btn) => btn.classList.remove("active"));
-      tab.classList.add("active");
-      const target = tab.dataset.tab;
-      elements.panels.forEach((panel) => {
-        if (panel.id === `tab-${target}`) {
-          panel.classList.remove("hidden");
-          panel.classList.add("active");
-        } else {
-          panel.classList.add("hidden");
-          panel.classList.remove("active");
-        }
-      });
-      elements.pageTitle.textContent = tab.textContent.trim();
+      setActiveTab(tab.dataset.tab, { focus: false });
       setSidebarOpen(false);
     });
+
+    tab.addEventListener("keydown", (event) => {
+      const key = event.key;
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) return;
+      event.preventDefault();
+      const lastIndex = elements.tabs.length - 1;
+      let nextIndex = index;
+      if (key === "ArrowLeft") nextIndex = index === 0 ? lastIndex : index - 1;
+      if (key === "ArrowRight") nextIndex = index === lastIndex ? 0 : index + 1;
+      if (key === "Home") nextIndex = 0;
+      if (key === "End") nextIndex = lastIndex;
+      const nextTab = elements.tabs[nextIndex];
+      if (nextTab) {
+        setActiveTab(nextTab.dataset.tab, { focus: true });
+      }
+    });
   });
+
+  const initialTab = elements.tabs.find((tab) => tab.classList.contains("active"));
+  if (initialTab) {
+    setActiveTab(initialTab.dataset.tab, { focus: false });
+  }
+}
+
+function setActiveTab(tabId, { focus = false } = {}) {
+  elements.tabs.forEach((btn) => {
+    const isActive = btn.dataset.tab === tabId;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    btn.tabIndex = isActive ? 0 : -1;
+    if (isActive && focus) {
+      btn.focus();
+    }
+  });
+
+  elements.panels.forEach((panel) => {
+    if (panel.id === `tab-${tabId}`) {
+      panel.classList.remove("hidden");
+      panel.classList.add("active");
+    } else {
+      panel.classList.add("hidden");
+      panel.classList.remove("active");
+    }
+  });
+
+  const activeTab = elements.tabs.find((btn) => btn.dataset.tab === tabId);
+  if (activeTab) {
+    elements.pageTitle.textContent = activeTab.textContent.trim();
+  }
 }
 
 function setSidebarOpen(open) {
@@ -403,6 +581,9 @@ function setSidebarOpen(open) {
     elements.sidebar.classList.remove("open");
     elements.sidebarOverlay.classList.remove("visible");
     elements.sidebarOverlay.setAttribute("aria-hidden", "true");
+  }
+  if (elements.mobileNavToggle) {
+    elements.mobileNavToggle.setAttribute("aria-expanded", open ? "true" : "false");
   }
 }
 
@@ -428,7 +609,7 @@ function updateConnectionUI() {
 
   const buttonText = status === "connected" ? "Disconnect" : "Connect";
   elements.connectBtn.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${status === "connected"
         ? '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
         : '<path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>'
@@ -517,14 +698,14 @@ function setLogging(enabled) {
     : '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>';
 
   const buttonHTML = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${icon}
     </svg>
     <span class="btn-text">${label}</span>
   `;
 
   const sessionsButtonHTML = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${icon}
     </svg>
     ${label}
@@ -671,6 +852,29 @@ function handleStop() {
   updateParamUI();
 }
 
+function getTargetBufferLength() {
+  const length = Math.round(state.visualization.sampleRate * state.visualization.windowSeconds);
+  return Math.max(60, length);
+}
+
+function updateChartControls() {
+  if (elements.windowRange) {
+    elements.windowRange.value = String(state.visualization.windowSeconds);
+  }
+  if (elements.windowValue) {
+    elements.windowValue.textContent = `${state.visualization.windowSeconds.toFixed(1)}s`;
+  }
+  if (elements.gainRange) {
+    elements.gainRange.value = String(state.visualization.gain.toFixed(1));
+  }
+  if (elements.gainValue) {
+    elements.gainValue.textContent = `${state.visualization.gain.toFixed(1)}x`;
+  }
+  if (elements.snapshotBtn) {
+    elements.snapshotBtn.textContent = state.visualization.snapshot ? "Clear Snapshot" : "Capture Snapshot";
+  }
+}
+
 // Visualization
 function setupVisualization() {
   resizeCanvas(elements.tremorCanvas);
@@ -683,6 +887,9 @@ function setupVisualization() {
   // Chart tooltip interactivity
   elements.chartContainer.addEventListener("mousemove", handleChartMouseMove);
   elements.chartContainer.addEventListener("mouseleave", handleChartMouseLeave);
+  elements.chartContainer.addEventListener("focus", handleChartFocus);
+  elements.chartContainer.addEventListener("blur", handleChartBlur);
+  elements.chartContainer.addEventListener("keydown", handleChartKeydown);
 
   requestAnimationFrame(animate);
   window.setInterval(updateClinicalMetrics, 500);
@@ -701,10 +908,19 @@ function animate(timestamp) {
   if (!lastFrame) lastFrame = timestamp;
   const delta = (timestamp - lastFrame) / 1000;
   lastFrame = timestamp;
+  if (delta > 0) {
+    const instantRate = 1 / delta;
+    state.visualization.sampleRate =
+      state.visualization.sampleRate * 0.9 + instantRate * 0.1;
+  }
+  if (elements.sampleRateValue) {
+    elements.sampleRateValue.textContent = formatNumber(state.visualization.sampleRate, 1);
+  }
   if (!state.visualization.freeze) {
     updateSignal(delta);
   }
   drawChart();
+  drawSpectrum();
   requestAnimationFrame(animate);
 }
 
@@ -718,7 +934,8 @@ function updateSignal(delta) {
   const sample = signal + noiseVal;
   state.visualization.lastSample = sample;
   state.visualization.buffer.push(sample);
-  if (state.visualization.buffer.length > 300) {
+  const targetLength = getTargetBufferLength();
+  while (state.visualization.buffer.length > targetLength) {
     state.visualization.buffer.shift();
   }
 }
@@ -734,7 +951,10 @@ function drawChart() {
   const style = getComputedStyle(document.documentElement);
   const chartPrimary = style.getPropertyValue("--chart-primary").trim() || "#0066ff";
   const chartSecondary = style.getPropertyValue("--chart-secondary").trim() || "#0891b2";
-  const chartGrid = style.getPropertyValue("--chart-grid").trim() || "rgba(0, 0, 0, 0.06)";
+  const chartGrid = style.getPropertyValue("--chart-grid").trim() || "rgba(0, 0, 0, 0.1)";
+  const chartGridStrong = chartGrid.replace(/0\.\d+\)$/, "0.2)") || "rgba(0, 0, 0, 0.2)";
+  const chartGridFine = chartGrid.replace(/0\.\d+\)$/, "0.06)") || "rgba(0, 0, 0, 0.06)";
+  const align = (value) => Math.round(value) + 0.5;
 
   // Background gradient
   const gradient = ctx.createLinearGradient(0, 0, width, height);
@@ -743,13 +963,35 @@ function drawChart() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
+  // Draw fine grid lines
+  ctx.strokeStyle = chartGridFine;
+  ctx.lineWidth = 1;
+  const fineY = 16;
+  const fineX = 20;
+  for (let i = 0; i <= fineY; i += 1) {
+    const y = align((height / fineY) * i);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  for (let i = 0; i <= fineX; i += 1) {
+    const x = align((width / fineX) * i);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+
   // Draw grid lines
   ctx.strokeStyle = chartGrid;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
 
   // Horizontal grid lines
-  for (let i = 0; i <= 4; i++) {
-    const y = (height / 4) * i;
+  const majorY = 4;
+  const majorX = 6;
+  for (let i = 0; i <= majorY; i++) {
+    const y = align((height / majorY) * i);
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(width, y);
@@ -757,8 +999,8 @@ function drawChart() {
   }
 
   // Vertical grid lines
-  for (let i = 0; i <= 6; i++) {
-    const x = (width / 6) * i;
+  for (let i = 0; i <= majorX; i++) {
+    const x = align((width / majorX) * i);
     ctx.beginPath();
     ctx.moveTo(x, 0);
     ctx.lineTo(x, height);
@@ -766,19 +1008,28 @@ function drawChart() {
   }
 
   // Center line
-  ctx.strokeStyle = chartGrid;
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = chartGridStrong;
+  ctx.lineWidth = 2.2;
   const mid = height / 2;
   ctx.beginPath();
   ctx.setLineDash([5, 5]);
-  ctx.moveTo(0, mid);
-  ctx.lineTo(width, mid);
+  const midY = align(mid);
+  ctx.moveTo(0, midY);
+  ctx.lineTo(width, midY);
   ctx.stroke();
   ctx.setLineDash([]);
 
   // Draw signal
   const data = state.visualization.buffer;
-  const scale = (height * 0.35) / 100;
+  let maxAbs = 100;
+  if (state.visualization.autoScale && data.length > 0) {
+    maxAbs = data.reduce((max, value) => Math.max(max, Math.abs(value)), 1);
+  }
+  let scale = (height * 0.35) / maxAbs;
+  scale *= state.visualization.gain;
+  const maxAmp = (height * 0.35) / scale;
+
+  // Normal band overlay removed for a cleaner waveform view
 
   // Glow effect
   ctx.shadowColor = chartPrimary;
@@ -799,6 +1050,28 @@ function drawChart() {
   });
   ctx.stroke();
 
+  // Snapshot overlay
+  if (state.visualization.snapshot && state.visualization.snapshot.length > 1) {
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = chartSecondary;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    state.visualization.snapshot.forEach((value, index) => {
+      const x = (index / (state.visualization.snapshot.length - 1)) * width;
+      const y = mid - value * scale;
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
   // Reset shadow
   ctx.shadowBlur = 0;
 
@@ -814,8 +1087,8 @@ function drawChart() {
       const y = mid - data[index] * scale;
 
       // Vertical line
-      ctx.strokeStyle = `${chartSecondary}60`;
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = chartGridStrong;
+      ctx.lineWidth = 1.8;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -835,6 +1108,57 @@ function drawChart() {
       ctx.fill();
     }
   }
+
+  // Axis ticks removed for a cleaner waveform view
+}
+
+function drawSpectrum() {
+  const canvas = elements.spectrumCanvas;
+  if (!canvas) return;
+  if (state.visualization.freezeSpectrum) return;
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+
+  const style = getComputedStyle(document.documentElement);
+  const chartSecondary = style.getPropertyValue("--chart-secondary").trim() || "#0891b2";
+  const chartGrid = style.getPropertyValue("--chart-grid").trim() || "rgba(0, 0, 0, 0.06)";
+
+  ctx.strokeStyle = chartGrid;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i += 1) {
+    const y = (height / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  const spectrum = calculateSpectrum(state.visualization.buffer, state.visualization.sampleRate);
+  if (spectrum.length === 0) return;
+
+  const band = spectrum.filter((bin) => bin.freq >= 2 && bin.freq <= 12);
+  const maxMag = Math.max(...band.map((bin) => bin.mag), 1);
+
+  ctx.strokeStyle = chartSecondary;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  band.forEach((bin, index) => {
+    const x = (index / (band.length - 1)) * width;
+    const y = height - (bin.mag / maxMag) * (height * 0.9) - height * 0.05;
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
 }
 
 function handleChartMouseMove(event) {
@@ -842,61 +1166,151 @@ function handleChartMouseMove(event) {
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
 
+  state.visualization.usingKeyboard = false;
   state.visualization.mouseX = x;
   state.visualization.mouseY = y;
 
-  // Update tooltip
-  const data = state.visualization.buffer;
-  const index = Math.floor((x / rect.width) * data.length);
-
-  if (index >= 0 && index < data.length) {
-    const amplitude = data[index];
-    const phase = ((state.visualization.t * state.params.freq * 360) % 360).toFixed(1);
-
-    $("#tooltipAmplitude").textContent = formatNumber(amplitude, 2);
-    $("#tooltipTime").textContent = `${index}/${data.length}`;
-    $("#tooltipPhase").textContent = `${phase}°`;
-
-    // Position tooltip
-    const tooltip = elements.chartTooltip;
-    let tooltipX = x + 15;
-    let tooltipY = y - 10;
-
-    // Keep tooltip within bounds
-    if (tooltipX + 200 > rect.width) {
-      tooltipX = x - 195;
-    }
-    if (tooltipY < 0) {
-      tooltipY = y + 20;
-    }
-
-    tooltip.style.left = `${tooltipX}px`;
-    tooltip.style.top = `${tooltipY}px`;
-    tooltip.classList.add("visible");
-  }
+  const index = Math.floor((x / rect.width) * state.visualization.buffer.length);
+  showChartTooltip(index, x, y, rect);
 }
 
 function handleChartMouseLeave() {
+  if (state.visualization.usingKeyboard) return;
+  clearChartSelection();
+}
+
+function handleChartFocus() {
+  state.visualization.usingKeyboard = true;
+  const rect = elements.chartContainer.getBoundingClientRect();
+  const data = state.visualization.buffer;
+  const midIndex = Math.floor(data.length / 2);
+  state.visualization.keyboardIndex = midIndex;
+  showChartTooltip(midIndex, null, null, rect);
+}
+
+function handleChartBlur() {
+  clearChartSelection();
+}
+
+function handleChartKeydown(event) {
+  const keys = ["ArrowLeft", "ArrowRight", "Home", "End", "Escape"];
+  if (!keys.includes(event.key)) return;
+  event.preventDefault();
+
+  if (event.key === "Escape") {
+    clearChartSelection();
+    return;
+  }
+
+  const rect = elements.chartContainer.getBoundingClientRect();
+  const data = state.visualization.buffer;
+  let index = state.visualization.keyboardIndex ?? Math.floor(data.length / 2);
+
+  if (event.key === "ArrowLeft") index -= 1;
+  if (event.key === "ArrowRight") index += 1;
+  if (event.key === "Home") index = 0;
+  if (event.key === "End") index = data.length - 1;
+
+  index = Math.max(0, Math.min(data.length - 1, index));
+  state.visualization.keyboardIndex = index;
+  state.visualization.usingKeyboard = true;
+  showChartTooltip(index, null, null, rect);
+}
+
+function showChartTooltip(index, x, y, rect) {
+  const data = state.visualization.buffer;
+  if (index < 0 || index >= data.length) return;
+
+  const amplitude = data[index];
+  const phase = ((state.visualization.t * state.params.freq * 360) % 360).toFixed(1);
+  const tooltip = elements.chartTooltip;
+
+  const scale = (rect.height * 0.35) / 100;
+  const plotX = (index / (data.length - 1)) * rect.width;
+  const plotY = rect.height / 2 - amplitude * scale;
+  const tooltipX = x ?? plotX;
+  const tooltipY = y ?? plotY;
+
+  const sampleRate = state.visualization.sampleRate || SIM_SAMPLE_RATE;
+  const timeSeconds = sampleRate > 0 ? index / sampleRate : 0;
+  const totalSeconds = sampleRate > 0 ? data.length / sampleRate : 0;
+  $("#tooltipAmplitude").textContent = formatNumber(amplitude, 2);
+  $("#tooltipTime").textContent = `${timeSeconds.toFixed(2)}s / ${totalSeconds.toFixed(2)}s`;
+  $("#tooltipPhase").textContent = `${phase}°`;
+
+  if (elements.chartLive) {
+    elements.chartLive.textContent = `Amplitude ${formatNumber(amplitude, 2)}, time ${timeSeconds.toFixed(2)} seconds of ${totalSeconds.toFixed(2)}, phase ${phase} degrees.`;
+  }
+
+  let left = tooltipX + 15;
+  let top = tooltipY - 10;
+
+  if (left + 200 > rect.width) {
+    left = tooltipX - 195;
+  }
+  if (top < 0) {
+    top = tooltipY + 20;
+  }
+  const tooltipHeight = tooltip.offsetHeight || 0;
+  if (tooltipHeight && top + tooltipHeight > rect.height) {
+    top = Math.max(8, tooltipY - tooltipHeight - 12);
+  }
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+  tooltip.classList.add("visible");
+  tooltip.setAttribute("aria-hidden", "false");
+
+  state.visualization.mouseX = plotX;
+  state.visualization.mouseY = plotY;
+
+}
+
+function clearChartSelection() {
   state.visualization.mouseX = null;
   state.visualization.mouseY = null;
+  state.visualization.keyboardIndex = null;
+  state.visualization.usingKeyboard = false;
   elements.chartTooltip.classList.remove("visible");
+  elements.chartTooltip.setAttribute("aria-hidden", "true");
+  if (elements.chartLive) {
+    elements.chartLive.textContent = "";
+  }
 }
 
 // Clinical metrics calculation
 function updateClinicalMetrics() {
   const buffer = state.visualization.buffer;
   const summary = calculateSummary(buffer);
+  const rmsWindow = calculateWindowedRMS(buffer, 120);
+  const spectrum = calculateSpectrum(buffer, state.visualization.sampleRate);
+  const dominantFreq = calculateDominantFrequency(
+    buffer,
+    state.visualization.sampleRate
+  );
 
-  // Dominant frequency (simulated with some jitter)
-  const baseFreq = state.params.freq;
-  const freqJitter = randomBetween(-0.1, 0.1);
-  state.clinicalMetrics.frequency = baseFreq + freqJitter;
+  // Dominant frequency (FFT-based)
+  state.clinicalMetrics.frequency = dominantFreq || state.params.freq;
 
-  // RMS Amplitude
-  state.clinicalMetrics.rms = summary.rms;
+  // RMS Amplitude (windowed)
+  state.clinicalMetrics.rms = rmsWindow;
 
-  // Power Spectral Density (simulated, in dB)
-  const power = summary.rms > 0 ? 10 * Math.log10(summary.rms * summary.rms) : -40;
+  // Peak-to-peak amplitude
+  let minVal = 0;
+  let maxVal = 0;
+  if (buffer.length > 0) {
+    minVal = buffer[0];
+    maxVal = buffer[0];
+    for (let i = 1; i < buffer.length; i += 1) {
+      const v = buffer[i];
+      if (v < minVal) minVal = v;
+      if (v > maxVal) maxVal = v;
+    }
+  }
+  state.clinicalMetrics.peakToPeak = maxVal - minVal;
+
+  // Power Spectral Density (in dB)
+  const power = rmsWindow > 0 ? 10 * Math.log10(rmsWindow * rmsWindow) : -40;
   state.clinicalMetrics.power = Math.max(-40, power);
 
   // Regularity Index (based on signal consistency)
@@ -911,10 +1325,10 @@ function updateClinicalMetrics() {
   // Estimated UPDRS Score (0-4 scale based on amplitude)
   // 0 = None, 1 = Slight, 2 = Mild, 3 = Moderate, 4 = Severe
   let updrsScore = 0;
-  if (summary.rms > 5) updrsScore = 1;
-  if (summary.rms > 15) updrsScore = 2;
-  if (summary.rms > 30) updrsScore = 3;
-  if (summary.rms > 50) updrsScore = 4;
+  if (rmsWindow > 5) updrsScore = 1;
+  if (rmsWindow > 15) updrsScore = 2;
+  if (rmsWindow > 30) updrsScore = 3;
+  if (rmsWindow > 50) updrsScore = 4;
   state.clinicalMetrics.updrs = updrsScore;
 
   // Signal-to-Noise Ratio
@@ -922,6 +1336,71 @@ function updateClinicalMetrics() {
   const noisePower = noiseLevel * noiseLevel * 0.1;
   const snr = noisePower > 0 ? 10 * Math.log10(signalPower / noisePower) : 40;
   state.clinicalMetrics.snr = Math.max(-10, Math.min(40, snr));
+
+  // Bandwidth (half-power width around dominant peak)
+  state.clinicalMetrics.bandwidth = 0;
+  if (spectrum.length > 0) {
+    const band = spectrum.filter((bin) => bin.freq >= 3 && bin.freq <= 12);
+    let peak = band[0];
+    band.forEach((bin) => {
+      if (bin.mag > peak.mag) peak = bin;
+    });
+    const threshold = peak.mag * 0.707;
+    let left = peak.freq;
+    let right = peak.freq;
+    for (let i = 0; i < band.length; i += 1) {
+      const bin = band[i];
+      if (bin.freq < peak.freq && bin.mag <= threshold) {
+        left = bin.freq;
+      }
+      if (bin.freq > peak.freq && bin.mag <= threshold) {
+        right = bin.freq;
+        break;
+      }
+    }
+    state.clinicalMetrics.bandwidth = Math.max(0, right - left);
+  }
+
+  // Dominant frequency stability (coefficient of variation)
+  const history = state.metricHistory.dominantFreq;
+  if (state.clinicalMetrics.frequency > 0) {
+    history.push(state.clinicalMetrics.frequency);
+    if (history.length > 30) history.shift();
+  }
+  let stability = 0;
+  if (history.length >= 5) {
+    const mean = history.reduce((sum, v) => sum + v, 0) / history.length;
+    const variance = history.reduce((sum, v) => sum + (v - mean) ** 2, 0) / history.length;
+    const stdev = Math.sqrt(variance);
+    const coefVar = mean > 0 ? stdev / mean : 1;
+    stability = Math.max(0, Math.min(100, 100 - coefVar * 100));
+  }
+  state.clinicalMetrics.stability = stability;
+
+  // Harmonic ratio (2nd + 3rd harmonics vs fundamental)
+  let harmonicRatio = 0;
+  if (spectrum.length > 0 && state.clinicalMetrics.frequency > 0) {
+    const fundamental = state.clinicalMetrics.frequency;
+    const findNearest = (target) => {
+      let nearest = spectrum[0];
+      let minDiff = Math.abs(nearest.freq - target);
+      for (let i = 1; i < spectrum.length; i += 1) {
+        const diff = Math.abs(spectrum[i].freq - target);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearest = spectrum[i];
+        }
+      }
+      return nearest.mag;
+    };
+    const fundamentalMag = findNearest(fundamental);
+    const h2 = findNearest(fundamental * 2);
+    const h3 = findNearest(fundamental * 3);
+    if (fundamentalMag > 0) {
+      harmonicRatio = ((h2 + h3) / fundamentalMag) * 100;
+    }
+  }
+  state.clinicalMetrics.harmonic = Math.max(0, Math.min(200, harmonicRatio));
 
   // Update UI
   updateClinicalMetricsUI();
@@ -937,6 +1416,10 @@ function updateClinicalMetricsUI() {
   elements.metricRegularity.textContent = formatNumber(m.regularity, 0);
   elements.metricUPDRS.textContent = m.updrs;
   elements.metricSNR.textContent = formatNumber(m.snr, 1);
+  elements.metricPeakToPeak.textContent = formatNumber(m.peakToPeak, 1);
+  elements.metricBandwidth.textContent = formatNumber(m.bandwidth, 2);
+  elements.metricStability.textContent = formatNumber(m.stability, 0);
+  elements.metricHarmonic.textContent = formatNumber(m.harmonic, 0);
 
   // Update indicators
   updateIndicator(elements.freqIndicator, m.frequency, 4, 6, 3, 8);
@@ -945,6 +1428,10 @@ function updateClinicalMetricsUI() {
   updateIndicator(elements.regularityIndicator, m.regularity, 60, 100, 0, 100);
   updateIndicator(elements.updrsIndicator, m.updrs, 0, 1, 0, 4);
   updateIndicator(elements.snrIndicator, m.snr, 15, 40, -10, 40);
+  updateIndicator(elements.peakToPeakIndicator, m.peakToPeak, 0, 60, 0, 120);
+  updateIndicator(elements.bandwidthIndicator, m.bandwidth, 0, 2, 0, 6);
+  updateIndicator(elements.stabilityIndicator, m.stability, 70, 100, 0, 100);
+  updateIndicator(elements.harmonicIndicator, m.harmonic, 0, 60, 0, 150);
 }
 
 function updateIndicator(element, value, normalMin, normalMax, alertMin, alertMax) {
@@ -989,17 +1476,17 @@ function renderProfiles() {
   state.profiles.forEach((profile) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${profile.name}</strong></td>
+      <th scope="row"><strong>${profile.name}</strong></th>
       <td>${formatDate(profile.updated)}</td>
       <td><span style="font-family: var(--font-mono)">${formatNumber(profile.freq, 1)}</span> Hz</td>
       <td><span style="font-family: var(--font-mono)">${Math.round(profile.amp)}</span></td>
       <td><span style="font-family: var(--font-mono)">${Math.round(profile.noise)}</span></td>
       <td>
         <div class="table-actions">
-          <button class="btn btn-secondary" data-action="load" data-id="${profile.id}">Load</button>
-          <button class="btn btn-ghost" data-action="rename" data-id="${profile.id}">Rename</button>
-          <button class="btn btn-ghost" data-action="duplicate" data-id="${profile.id}">Copy</button>
-          <button class="btn btn-danger" data-action="delete" data-id="${profile.id}">Delete</button>
+          <button class="btn btn-secondary" data-action="load" data-id="${profile.id}" aria-label="Load profile ${profile.name}">Load</button>
+          <button class="btn btn-ghost" data-action="rename" data-id="${profile.id}" aria-label="Rename profile ${profile.name}">Rename</button>
+          <button class="btn btn-ghost" data-action="duplicate" data-id="${profile.id}" aria-label="Copy profile ${profile.name}">Copy</button>
+          <button class="btn btn-danger" data-action="delete" data-id="${profile.id}" aria-label="Delete profile ${profile.name}">Delete</button>
         </div>
       </td>
     `;
@@ -1018,6 +1505,7 @@ function renderSequences() {
   state.sequences.forEach((sequence, index) => {
     const item = document.createElement("div");
     item.className = "list-item";
+    item.setAttribute("role", "listitem");
     item.style.animationDelay = `${index * 0.05}s`;
     if (sequence.id === state.selectedSequenceId) {
       item.classList.add("active");
@@ -1029,9 +1517,9 @@ function renderSequences() {
         <div class="list-sub">${sequence.steps.length} steps &middot; ${totalDuration}s total</div>
       </div>
       <div class="list-actions">
-        <button class="btn btn-ghost" data-action="edit" data-id="${sequence.id}">Edit</button>
-        <button class="btn btn-secondary" data-action="play" data-id="${sequence.id}">Play</button>
-        <button class="btn btn-danger" data-action="delete" data-id="${sequence.id}">Delete</button>
+        <button class="btn btn-ghost" data-action="edit" data-id="${sequence.id}" aria-label="Edit sequence ${sequence.name}">Edit</button>
+        <button class="btn btn-secondary" data-action="play" data-id="${sequence.id}" aria-label="Play sequence ${sequence.name}">Play</button>
+        <button class="btn btn-danger" data-action="delete" data-id="${sequence.id}" aria-label="Delete sequence ${sequence.name}">Delete</button>
       </div>
     `;
     elements.sequenceList.appendChild(item);
@@ -1046,7 +1534,7 @@ function renderSequenceEditor() {
     elements.sequenceEditor.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
         </div>
@@ -1061,14 +1549,14 @@ function renderSequenceEditor() {
     .map((step, index) => {
       return `
         <div class="step-row" data-index="${index}" style="animation-delay: ${index * 0.05}s">
-          <input type="number" min="1" step="1" value="${step.duration}" data-field="duration" data-index="${index}" placeholder="Duration" />
-          <input type="number" min="3" max="8" step="0.1" value="${step.freq}" data-field="freq" data-index="${index}" placeholder="Freq" />
-          <input type="number" min="0" max="100" step="1" value="${step.amp}" data-field="amp" data-index="${index}" placeholder="Amp" />
-          <input type="number" min="0" max="100" step="1" value="${step.noise}" data-field="noise" data-index="${index}" placeholder="Noise" />
+          <input type="number" min="1" step="1" value="${step.duration}" data-field="duration" data-index="${index}" placeholder="Duration" aria-label="Step ${index + 1} duration in seconds" />
+          <input type="number" min="3" max="8" step="0.1" value="${step.freq}" data-field="freq" data-index="${index}" placeholder="Freq" aria-label="Step ${index + 1} frequency in hertz" />
+          <input type="number" min="0" max="100" step="1" value="${step.amp}" data-field="amp" data-index="${index}" placeholder="Amp" aria-label="Step ${index + 1} amplitude" />
+          <input type="number" min="0" max="100" step="1" value="${step.noise}" data-field="noise" data-index="${index}" placeholder="Noise" aria-label="Step ${index + 1} noise level" />
           <div class="step-actions">
-            <button class="btn btn-ghost" data-action="up" data-index="${index}">↑</button>
-            <button class="btn btn-ghost" data-action="down" data-index="${index}">↓</button>
-            <button class="btn btn-danger" data-action="remove" data-index="${index}">×</button>
+            <button class="btn btn-ghost" data-action="up" data-index="${index}" aria-label="Move step ${index + 1} up">↑</button>
+            <button class="btn btn-ghost" data-action="down" data-index="${index}" aria-label="Move step ${index + 1} down">↓</button>
+            <button class="btn btn-danger" data-action="remove" data-index="${index}" aria-label="Remove step ${index + 1}">×</button>
           </div>
         </div>
       `;
@@ -1103,7 +1591,7 @@ function renderSequenceEditor() {
       </div>
       ${stepsHtml}
       <button class="btn btn-secondary" id="addStepBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
@@ -1116,13 +1604,13 @@ function renderSequenceEditor() {
         </div>
         <div class="button-row" style="margin-top: 0;">
           <button class="btn btn-primary" data-action="seq-play">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
             Play
           </button>
           <button class="btn btn-secondary" data-action="seq-pause">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="6" y="4" width="4" height="16"/>
               <rect x="14" y="4" width="4" height="16"/>
             </svg>
@@ -1146,14 +1634,14 @@ function renderSessions() {
   state.sessions.forEach((session) => {
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td><strong>${session.name}</strong></td>
+      <th scope="row"><strong>${session.name}</strong></th>
       <td>${session.start}</td>
       <td><span style="font-family: var(--font-mono)">${formatDuration(session.durationSec)}</span></td>
       <td><span style="font-family: var(--font-mono)">${session.sampleCount}</span></td>
       <td>
         <div class="table-actions">
-          <button class="btn btn-secondary" data-action="view" data-id="${session.id}">View</button>
-          <button class="btn btn-danger" data-action="delete" data-id="${session.id}">Delete</button>
+          <button class="btn btn-secondary" data-action="view" data-id="${session.id}" aria-label="View session ${session.name}">View</button>
+          <button class="btn btn-danger" data-action="delete" data-id="${session.id}" aria-label="Delete session ${session.name}">Delete</button>
         </div>
       </td>
     `;
@@ -1165,11 +1653,42 @@ function renderSessions() {
 function openModal(modal) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  activeModal = modal;
+  lastFocusedElement = document.activeElement;
+  if (elements.app) {
+    elements.app.setAttribute("aria-hidden", "true");
+  }
+  const focusables = getFocusableElements(modal);
+  if (focusables.length > 0) {
+    focusables[0].focus();
+  }
 }
 
 function closeModal(modal) {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  activeModal = null;
+  if (elements.app) {
+    elements.app.removeAttribute("aria-hidden");
+  }
+  if (lastFocusedElement) {
+    lastFocusedElement.focus();
+    lastFocusedElement = null;
+  }
+}
+
+function getFocusableElements(container) {
+  const selector = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])"
+  ].join(",");
+  return Array.from(container.querySelectorAll(selector)).filter(
+    (el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true"
+  );
 }
 
 function bindModalEvents() {
@@ -1184,6 +1703,19 @@ function bindModalEvents() {
     if (event.key === "Escape") {
       closeModal(elements.profileModal);
       closeModal(elements.sessionModal);
+      return;
+    }
+    if (event.key !== "Tab" || !activeModal) return;
+    const focusables = getFocusableElements(activeModal);
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   });
 }
@@ -1603,6 +2135,12 @@ function bindSettingsEvents() {
       applyTheme();
     });
   }
+  if (elements.settingHighContrast) {
+    elements.settingHighContrast.addEventListener("change", (event) => {
+      state.contrast = event.target.checked ? "high" : "normal";
+      applyContrast();
+    });
+  }
 }
 
 // Initialize
@@ -1610,6 +2148,7 @@ function init() {
   bindElements();
   loadData();
   initTheme();
+  initContrast();
   initSidebarCollapse();
 
   initTabs();
@@ -1648,7 +2187,7 @@ function init() {
       ? '<polygon points="5 3 19 12 5 21 5 3"/>'
       : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
     elements.freezeBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${icon}
       </svg>
       ${state.visualization.freeze ? "Resume" : "Freeze"}
@@ -1656,8 +2195,49 @@ function init() {
   });
 
   elements.clearBtn.addEventListener("click", () => {
-    state.visualization.buffer = new Array(300).fill(0);
+    state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   });
+
+  if (elements.snapshotBtn) {
+    elements.snapshotBtn.addEventListener("click", () => {
+      if (state.visualization.snapshot) {
+        state.visualization.snapshot = null;
+      } else {
+        state.visualization.snapshot = state.visualization.buffer.slice();
+      }
+      updateChartControls();
+    });
+  }
+
+  if (elements.windowRange) {
+    elements.windowRange.addEventListener("input", (event) => {
+      state.visualization.windowSeconds = Number(event.target.value);
+      const targetLength = getTargetBufferLength();
+      while (state.visualization.buffer.length > targetLength) {
+        state.visualization.buffer.shift();
+      }
+      updateChartControls();
+    });
+  }
+
+  if (elements.gainRange) {
+    elements.gainRange.addEventListener("input", (event) => {
+      state.visualization.gain = Number(event.target.value);
+      updateChartControls();
+    });
+  }
+
+  if (elements.spectrumFreezeBtn) {
+    elements.spectrumFreezeBtn.addEventListener("click", () => {
+      state.visualization.freezeSpectrum = !state.visualization.freezeSpectrum;
+      const label = state.visualization.freezeSpectrum ? "Resume Spectrum" : "Freeze Spectrum";
+      elements.spectrumFreezeBtn.textContent = label;
+      elements.spectrumFreezeBtn.setAttribute(
+        "aria-pressed",
+        state.visualization.freezeSpectrum ? "true" : "false"
+      );
+    });
+  }
 
   updateParamUI();
   updateLastSentUI();
@@ -1666,6 +2246,8 @@ function init() {
   renderSequences();
   renderSessions();
   updateQuickProfileSelection();
+  updateChartControls();
+  state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   setupVisualization();
 }
 
