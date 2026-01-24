@@ -14,12 +14,13 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
           <div class="brand-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
@@ -28,21 +29,21 @@
             <div class="brand-sub">Clinical Dashboard</div>
           </div>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-          <svg class="icon-collapse" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-controls="sidebar" aria-pressed="false">
+          <svg aria-hidden="true" focusable="false" class="icon-collapse" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 17l-5-5 5-5"/>
             <path d="M18 17l-5-5 5-5"/>
           </svg>
-          <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg aria-hidden="true" focusable="false" class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13 17l5-5-5-5"/>
             <path d="M6 17l5-5-5-5"/>
           </svg>
         </button>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item active" data-tab="dashboard" title="Dashboard">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <nav class="nav" role="tablist" aria-label="Primary">
+        <button class="nav-item active" id="tab-dashboard-btn" data-tab="dashboard" title="Dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">
+          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="9"/>
             <rect x="14" y="3" width="7" height="5"/>
             <rect x="14" y="12" width="7" height="9"/>
@@ -50,8 +51,8 @@
           </svg>
           <span>Dashboard</span>
         </button>
-        <button class="nav-item" data-tab="profiles" title="Profiles">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-profiles-btn" data-tab="profiles" title="Profiles" role="tab" aria-controls="tab-profiles" aria-selected="false" tabindex="-1">
+          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -59,14 +60,14 @@
           </svg>
           <span>Profiles</span>
         </button>
-        <button class="nav-item" data-tab="sequences" title="Sequences">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-sequences-btn" data-tab="sequences" title="Sequences" role="tab" aria-controls="tab-sequences" aria-selected="false" tabindex="-1">
+          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
           <span>Sequences</span>
         </button>
-        <button class="nav-item" data-tab="sessions" title="Sessions">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-sessions-btn" data-tab="sessions" title="Sessions" role="tab" aria-controls="tab-sessions" aria-selected="false" tabindex="-1">
+          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
             <line x1="16" y1="13" x2="8" y2="13"/>
@@ -75,8 +76,8 @@
           </svg>
           <span>Sessions</span>
         </button>
-        <button class="nav-item" data-tab="settings" title="Settings">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-settings-btn" data-tab="settings" title="Settings" role="tab" aria-controls="tab-settings" aria-selected="false" tabindex="-1">
+          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
@@ -86,11 +87,11 @@
 
       <div class="sidebar-footer">
         <div class="status-row">
-          <span class="status-dot" id="sidebarStatusDot"></span>
-          <span id="sidebarStatusText">Disconnected</span>
+          <span class="status-dot" id="sidebarStatusDot" aria-hidden="true"></span>
+          <span id="sidebarStatusText" aria-live="polite">Disconnected</span>
         </div>
         <button class="btn btn-ghost full" id="sidebarLogBtn" title="Start Recording">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>
@@ -100,15 +101,15 @@
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-    <main class="main">
+    <main class="main" id="mainContent">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="sidebar-toggle mobile-menu-btn" id="mobileNavToggle" aria-label="Toggle sidebar">
-            <svg class="icon-collapse" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="sidebar-toggle mobile-menu-btn" id="mobileNavToggle" aria-label="Toggle sidebar" aria-controls="sidebar" aria-expanded="false">
+            <svg aria-hidden="true" focusable="false" class="icon-collapse" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 17l-5-5 5-5"/>
               <path d="M18 17l-5-5 5-5"/>
             </svg>
-            <svg class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" class="icon-expand" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M13 17l5-5-5-5"/>
               <path d="M6 17l5-5-5-5"/>
             </svg>
@@ -119,7 +120,7 @@
           </div>
         </div>
         <div class="topbar-status">
-          <div class="status-pill" id="topStatusPill" data-status="disconnected">Disconnected</div>
+          <div class="status-pill" id="topStatusPill" data-status="disconnected" role="status" aria-live="polite">Disconnected</div>
           <div class="metric-inline">
             <span>Latency</span>
             <strong id="topLatency">--</strong>
@@ -131,7 +132,7 @@
             <small>%</small>
           </div>
           <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-            <svg id="themeIconLight" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" id="themeIconLight" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="5"/>
               <line x1="12" y1="1" x2="12" y2="3"/>
               <line x1="12" y1="21" x2="12" y2="23"/>
@@ -142,7 +143,7 @@
               <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
-            <svg id="themeIconDark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+            <svg aria-hidden="true" focusable="false" id="themeIconDark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
@@ -150,7 +151,7 @@
       </header>
 
       <!-- Dashboard Tab -->
-      <section id="tab-dashboard" class="tab-panel active">
+      <section id="tab-dashboard" class="tab-panel active" role="tabpanel" aria-labelledby="tab-dashboard-btn">
         <div class="grid dashboard-grid">
           <!-- Connection Card -->
           <div class="card span-4">
@@ -159,7 +160,7 @@
                 <h2>Connection</h2>
                 <p class="muted">Device connectivity status</p>
               </div>
-              <div class="status-pill" id="connectionStatusPill" data-status="disconnected">Disconnected</div>
+              <div class="status-pill" id="connectionStatusPill" data-status="disconnected" role="status" aria-live="polite">Disconnected</div>
             </div>
             <div class="field">
               <label for="connectionMode">Connection Mode</label>
@@ -171,7 +172,7 @@
             </div>
             <div class="button-row">
               <button class="btn btn-primary" id="connectBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M5 12h14"/>
                   <path d="M12 5l7 7-7 7"/>
                 </svg>
@@ -199,7 +200,7 @@
             <div class="inline-row">
               <div>
                 <div class="label">Session Recording</div>
-                <div class="muted">Status: <span id="loggingStatus">Inactive</span></div>
+                <div class="muted">Status: <span id="loggingStatus" aria-live="polite">Inactive</span></div>
               </div>
               <button class="btn btn-ghost" id="logToggleBtn">Start</button>
             </div>
@@ -213,7 +214,7 @@
                 <p class="muted">Configure real-time signal generation</p>
               </div>
               <div class="unsaved" id="unsavedIndicator" style="display: none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -246,24 +247,24 @@
             </div>
             <div class="toggle-row">
               <label class="switch">
-                <input type="checkbox" id="enableTremor" />
+                <input type="checkbox" id="enableTremor" aria-labelledby="enableTremorLabel" aria-describedby="enableTremorHelp" />
                 <span class="slider"></span>
               </label>
               <div>
-                <div class="label">Enable Tremor Output</div>
-                <div class="muted">Generate signal based on current parameters</div>
+                <div class="label" id="enableTremorLabel">Enable Tremor Output</div>
+                <div class="muted" id="enableTremorHelp">Generate signal based on current parameters</div>
               </div>
             </div>
             <div class="button-row">
               <button class="btn btn-primary" id="sendBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"/>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                 </svg>
                 Apply Parameters
               </button>
               <button class="btn btn-danger" id="stopBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 </svg>
                 Stop
@@ -279,43 +280,87 @@
             <div class="card-header">
               <div>
                 <h2>Real-Time Waveform</h2>
-                <p class="muted">Live tremor signal visualization - hover for detailed analysis</p>
+                <p class="muted">Live tremor signal visualization</p>
               </div>
               <div class="button-row" style="margin-top: 0;">
                 <button class="btn btn-secondary" id="freezeBtn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="6" y="4" width="4" height="16"/>
                     <rect x="14" y="4" width="4" height="16"/>
                   </svg>
                   Freeze
                 </button>
+                <button class="btn btn-ghost" id="snapshotBtn">Capture Snapshot</button>
                 <button class="btn btn-ghost" id="clearBtn">Clear</button>
               </div>
             </div>
-            <div class="chart-wrap" id="chartContainer">
-              <canvas id="tremorCanvas"></canvas>
-              <div class="chart-tooltip" id="chartTooltip">
-                <div class="chart-tooltip-header">Signal Analysis</div>
-                <div class="chart-tooltip-row">
-                  <span class="chart-tooltip-label">Amplitude</span>
-                  <span class="chart-tooltip-value" id="tooltipAmplitude">--</span>
+            <div class="chart-frame">
+              <div class="chart-y-label" aria-hidden="true">Amplitude</div>
+              <div>
+                <div class="chart-wrap" id="chartContainer" tabindex="0" role="group" aria-label="Waveform viewer" aria-describedby="chartHelp chartLive">
+                  <p id="chartHelp" class="sr-only">Use left and right arrow keys to move through the waveform. Press Escape to clear the selection.</p>
+                  <div id="chartLive" class="sr-only" aria-live="polite"></div>
+                  <canvas id="tremorCanvas" role="img" aria-label="Real-time tremor waveform chart"></canvas>
+                  <div class="chart-tooltip" id="chartTooltip" role="tooltip" aria-hidden="true">
+                    <div class="chart-tooltip-header">Signal Analysis</div>
+                    <div class="chart-tooltip-row">
+                      <span class="chart-tooltip-label">Amplitude</span>
+                      <span class="chart-tooltip-value" id="tooltipAmplitude">--</span>
+                    </div>
+                    <div class="chart-tooltip-row">
+                      <span class="chart-tooltip-label">Time</span>
+                      <span class="chart-tooltip-value" id="tooltipTime">--</span>
+                    </div>
+                    <div class="chart-tooltip-row">
+                      <span class="chart-tooltip-label">Phase</span>
+                      <span class="chart-tooltip-value" id="tooltipPhase">--</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="chart-tooltip-row">
-                  <span class="chart-tooltip-label">Time Index</span>
-                  <span class="chart-tooltip-value" id="tooltipTime">--</span>
+                <div class="chart-x-label" aria-hidden="true">Time</div>
+              </div>
+            </div>
+            <div class="chart-controls">
+              <div class="control">
+                <label for="windowRange">Window</label>
+                <div class="input-row compact">
+                  <input type="range" id="windowRange" min="0" max="10" step="0.5" />
+                  <span class="control-value" id="windowValue">5.0s</span>
                 </div>
-                <div class="chart-tooltip-row">
-                  <span class="chart-tooltip-label">Phase</span>
-                  <span class="chart-tooltip-value" id="tooltipPhase">--</span>
+              </div>
+              <div class="control">
+                <label for="gainRange">Gain</label>
+                <div class="input-row compact">
+                  <input type="range" id="gainRange" min="0.5" max="2" step="0.1" />
+                  <span class="control-value" id="gainValue">1.0x</span>
                 </div>
+              </div>
+            </div>
+            <div class="spectrum-section">
+              <div class="spectrum-header">
+                <div>
+                  <h3>Power Spectrum</h3>
+                  <p class="muted">Frequency Verification (2-12 Hz)</p>
+                </div>
+                <div class="spectrum-controls">
+                  <div class="sample-rate">
+                    <span>Sample Rate</span>
+                    <strong id="sampleRateValue">--</strong>
+                    <small>Hz</small>
+                  </div>
+                  <button class="btn btn-ghost" id="spectrumFreezeBtn" aria-pressed="false">Freeze Spectrum</button>
+                </div>
+              </div>
+              <div class="spectrum-wrap">
+                <canvas id="spectrumCanvas" role="img" aria-label="Power spectrum chart"></canvas>
               </div>
             </div>
 
             <!-- Clinical Metrics Section -->
             <div class="clinical-metrics" id="clinicalMetrics">
-              <div class="clinical-metric" data-metric="frequency">
+              <div class="clinical-metric" data-metric="frequency" tabindex="0" aria-describedby="metricFrequencyHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                   </svg>
                   <span class="clinical-metric-title">Dominant Frequency</span>
@@ -328,14 +373,14 @@
                   <span class="clinical-metric-indicator normal" id="freqIndicator"></span>
                   <span>PD typical: 4-6 Hz</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricFrequencyHelp" role="tooltip">
                   <p><strong>Tremor Frequency</strong><br>Parkinson's disease tremor typically occurs at 4-6 Hz. Essential tremor is usually faster (5-10 Hz). Cerebellar tremor tends to be slower (3-5 Hz).</p>
                 </div>
               </div>
 
-              <div class="clinical-metric" data-metric="amplitude">
+              <div class="clinical-metric" data-metric="amplitude" tabindex="0" aria-describedby="metricRmsHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M2 12h4l3-9 6 18 3-9h4"/>
                   </svg>
                   <span class="clinical-metric-title">RMS Amplitude</span>
@@ -348,14 +393,14 @@
                   <span class="clinical-metric-indicator normal" id="rmsIndicator"></span>
                   <span>Root Mean Square</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricRmsHelp" role="tooltip">
                   <p><strong>RMS Amplitude</strong><br>Measures overall signal energy. Higher values indicate stronger tremor. Used to quantify tremor severity according to UPDRS motor scoring.</p>
                 </div>
               </div>
 
-              <div class="clinical-metric" data-metric="power">
+              <div class="clinical-metric" data-metric="power" tabindex="0" aria-describedby="metricPowerHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                   </svg>
                   <span class="clinical-metric-title">Signal Power</span>
@@ -368,14 +413,14 @@
                   <span class="clinical-metric-indicator normal" id="powerIndicator"></span>
                   <span>Power Spectral Density</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricPowerHelp" role="tooltip">
                   <p><strong>Power Spectral Density</strong><br>Total power in the tremor frequency band (3-8 Hz). Correlates with UPDRS tremor subscore. Used for monitoring medication efficacy.</p>
                 </div>
               </div>
 
-              <div class="clinical-metric" data-metric="regularity">
+              <div class="clinical-metric" data-metric="regularity" tabindex="0" aria-describedby="metricRegularityHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
@@ -389,14 +434,14 @@
                   <span class="clinical-metric-indicator normal" id="regularityIndicator"></span>
                   <span>Rhythm consistency</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricRegularityHelp" role="tooltip">
                   <p><strong>Regularity Index</strong><br>Measures how consistent the tremor rhythm is. PD rest tremor is typically very regular (>80%). Lower values may indicate physiological or action tremor.</p>
                 </div>
               </div>
 
-              <div class="clinical-metric" data-metric="updrs">
+              <div class="clinical-metric" data-metric="updrs" tabindex="0" aria-describedby="metricUpdrsHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                     <line x1="16" y1="13" x2="8" y2="13"/>
@@ -412,14 +457,14 @@
                   <span class="clinical-metric-indicator normal" id="updrsIndicator"></span>
                   <span>Tremor subscore</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricUpdrsHelp" role="tooltip">
                   <p><strong>UPDRS Tremor Score</strong><br>Estimated score based on MDS-UPDRS Part III tremor items. 0=None, 1=Slight, 2=Mild, 3=Moderate, 4=Severe. For clinical reference only.</p>
                 </div>
               </div>
 
-              <div class="clinical-metric" data-metric="snr">
+              <div class="clinical-metric" data-metric="snr" tabindex="0" aria-describedby="metricSnrHelp">
                 <div class="clinical-metric-header">
-                  <svg class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                   </svg>
                   <span class="clinical-metric-title">Signal Quality</span>
@@ -432,8 +477,92 @@
                   <span class="clinical-metric-indicator normal" id="snrIndicator"></span>
                   <span>Signal-to-Noise Ratio</span>
                 </div>
-                <div class="clinical-metric-tooltip">
+                <div class="clinical-metric-tooltip" id="metricSnrHelp" role="tooltip">
                   <p><strong>Signal-to-Noise Ratio</strong><br>Quality of the tremor signal. Higher values (>20 dB) indicate clean signal. Low SNR may affect accuracy of frequency and amplitude measurements.</p>
+                </div>
+              </div>
+              <div class="clinical-metric" data-metric="peak-to-peak" tabindex="0" aria-describedby="metricPeakToPeakHelp">
+                <div class="clinical-metric-header">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h4l3-9 6 18 3-9h4"/>
+                    <path d="M3 3v6M3 15v6M21 3v6M21 15v6"/>
+                  </svg>
+                  <span class="clinical-metric-title">Peak-to-Peak</span>
+                </div>
+                <div>
+                  <span class="clinical-metric-value" id="metricPeakToPeak">--</span>
+                  <span class="clinical-metric-unit">units</span>
+                </div>
+                <div class="clinical-metric-range">
+                  <span class="clinical-metric-indicator normal" id="peakToPeakIndicator"></span>
+                  <span>Signal excursion</span>
+                </div>
+                <div class="clinical-metric-tooltip" id="metricPeakToPeakHelp" role="tooltip">
+                  <p><strong>Peak-to-Peak Amplitude</strong><br>Total excursion between the minimum and maximum waveform values. Complements RMS for severity tracking.</p>
+                </div>
+              </div>
+
+              <div class="clinical-metric" data-metric="bandwidth" tabindex="0" aria-describedby="metricBandwidthHelp">
+                <div class="clinical-metric-header">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="6" width="18" height="12" rx="2"/>
+                    <path d="M7 12h10"/>
+                  </svg>
+                  <span class="clinical-metric-title">Tremor Bandwidth</span>
+                </div>
+                <div>
+                  <span class="clinical-metric-value" id="metricBandwidth">--</span>
+                  <span class="clinical-metric-unit">Hz</span>
+                </div>
+                <div class="clinical-metric-range">
+                  <span class="clinical-metric-indicator normal" id="bandwidthIndicator"></span>
+                  <span>Peak width</span>
+                </div>
+                <div class="clinical-metric-tooltip" id="metricBandwidthHelp" role="tooltip">
+                  <p><strong>Tremor Bandwidth</strong><br>Half-power width of the dominant spectral peak. Narrower bands indicate steadier tremor frequency.</p>
+                </div>
+              </div>
+
+              <div class="clinical-metric" data-metric="stability" tabindex="0" aria-describedby="metricStabilityHelp">
+                <div class="clinical-metric-header">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 7v5l3 3"/>
+                  </svg>
+                  <span class="clinical-metric-title">Frequency Stability</span>
+                </div>
+                <div>
+                  <span class="clinical-metric-value" id="metricStability">--</span>
+                  <span class="clinical-metric-unit">%</span>
+                </div>
+                <div class="clinical-metric-range">
+                  <span class="clinical-metric-indicator normal" id="stabilityIndicator"></span>
+                  <span>Dominant freq variance</span>
+                </div>
+                <div class="clinical-metric-tooltip" id="metricStabilityHelp" role="tooltip">
+                  <p><strong>Dominant Frequency Stability</strong><br>Consistency of the dominant frequency over time. Higher values mean a steadier tremor rhythm.</p>
+                </div>
+              </div>
+
+              <div class="clinical-metric" data-metric="harmonic" tabindex="0" aria-describedby="metricHarmonicHelp">
+                <div class="clinical-metric-header">
+                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19c4-8 12-8 16 0"/>
+                    <path d="M4 13c4-6 12-6 16 0"/>
+                    <path d="M4 7c4-4 12-4 16 0"/>
+                  </svg>
+                  <span class="clinical-metric-title">Harmonic Ratio</span>
+                </div>
+                <div>
+                  <span class="clinical-metric-value" id="metricHarmonic">--</span>
+                  <span class="clinical-metric-unit">%</span>
+                </div>
+                <div class="clinical-metric-range">
+                  <span class="clinical-metric-indicator normal" id="harmonicIndicator"></span>
+                  <span>Overtones vs fundamental</span>
+                </div>
+                <div class="clinical-metric-tooltip" id="metricHarmonicHelp" role="tooltip">
+                  <p><strong>Harmonic Ratio</strong><br>Relative energy in the 2nd and 3rd harmonics compared with the fundamental. High values indicate a less pure tremor waveform.</p>
                 </div>
               </div>
             </div>
@@ -453,7 +582,7 @@
             </div>
             <div class="button-row">
               <button class="btn btn-secondary" id="loadProfileBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                   <polyline points="7 10 12 15 17 10"/>
                   <line x1="12" y1="15" x2="12" y2="3"/>
@@ -461,7 +590,7 @@
                 Load Profile
               </button>
               <button class="btn btn-primary" id="saveProfileBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
@@ -502,7 +631,7 @@
       </section>
 
       <!-- Profiles Tab -->
-      <section id="tab-profiles" class="tab-panel hidden">
+      <section id="tab-profiles" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-profiles-btn">
         <div class="section-header">
           <div>
             <h2 class="sr-only">Profiles</h2>
@@ -510,7 +639,7 @@
           </div>
           <div class="button-row" style="margin-top: 0;">
             <button class="btn btn-secondary" id="importProfilesBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
@@ -518,7 +647,7 @@
               Import
             </button>
             <button class="btn btn-ghost" id="exportProfilesBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
@@ -530,7 +659,7 @@
         <div class="card">
           <div class="empty-state hidden" id="profilesEmpty">
             <div class="empty-state-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -541,15 +670,16 @@
             <p>Create your first profile from the dashboard to get started.</p>
           </div>
           <div class="table-wrap">
-            <table class="data-table" id="profilesTable">
+            <table class="data-table" id="profilesTable" aria-label="Saved profiles">
+              <caption class="sr-only">Saved profiles</caption>
               <thead>
                 <tr>
-                  <th>Profile Name</th>
-                  <th>Last Modified</th>
-                  <th>Frequency</th>
-                  <th>Amplitude</th>
-                  <th>Noise</th>
-                  <th>Actions</th>
+                  <th scope="col">Profile Name</th>
+                  <th scope="col">Last Modified</th>
+                  <th scope="col">Frequency</th>
+                  <th scope="col">Amplitude</th>
+                  <th scope="col">Noise</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -559,7 +689,7 @@
       </section>
 
       <!-- Sequences Tab -->
-      <section id="tab-sequences" class="tab-panel hidden">
+      <section id="tab-sequences" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-sequences-btn">
         <div class="section-header">
           <div>
             <h2 class="sr-only">Sequences</h2>
@@ -567,7 +697,7 @@
           </div>
           <div class="button-row" style="margin-top: 0;">
             <button class="btn btn-primary" id="newSequenceBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -583,7 +713,7 @@
                 <p class="muted">Select a sequence to edit</p>
               </div>
             </div>
-            <div class="list" id="sequenceList"></div>
+            <div class="list" id="sequenceList" role="list"></div>
             <div class="empty-state hidden" id="sequencesEmpty">
               <h3>No Sequences</h3>
               <p>Create a new sequence to begin.</p>
@@ -592,7 +722,7 @@
           <div class="card span-8" id="sequenceEditor">
             <div class="empty-state">
               <div class="empty-state-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <polygon points="5 3 19 12 5 21 5 3"/>
                 </svg>
               </div>
@@ -604,7 +734,7 @@
       </section>
 
       <!-- Sessions Tab -->
-      <section id="tab-sessions" class="tab-panel hidden">
+      <section id="tab-sessions" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-sessions-btn">
         <div class="section-header">
           <div>
             <h2 class="sr-only">Sessions</h2>
@@ -612,7 +742,7 @@
           </div>
           <div class="button-row" style="margin-top: 0;">
             <button class="btn btn-primary" id="sessionsLogBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
@@ -623,7 +753,7 @@
         <div class="card">
           <div class="empty-state hidden" id="sessionsEmpty">
             <div class="empty-state-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
@@ -632,14 +762,15 @@
             <p>Start a recording session to capture tremor data for analysis.</p>
           </div>
           <div class="table-wrap">
-            <table class="data-table" id="sessionsTable">
+            <table class="data-table" id="sessionsTable" aria-label="Recorded sessions">
+              <caption class="sr-only">Recorded sessions</caption>
               <thead>
                 <tr>
-                  <th>Session Name</th>
-                  <th>Start Time</th>
-                  <th>Duration</th>
-                  <th>Samples</th>
-                  <th>Actions</th>
+                  <th scope="col">Session Name</th>
+                  <th scope="col">Start Time</th>
+                  <th scope="col">Duration</th>
+                  <th scope="col">Samples</th>
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -649,7 +780,7 @@
       </section>
 
       <!-- Settings Tab -->
-      <section id="tab-settings" class="tab-panel hidden">
+      <section id="tab-settings" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-settings-btn">
         <div class="card">
           <div class="card-header">
             <div>
@@ -660,51 +791,51 @@
           <div class="settings-grid">
             <div class="setting-item">
               <div>
-                <h3>Auto Connect</h3>
-                <p class="muted">Automatically connect to device on application launch</p>
+                <h3 id="settingAutoConnectLabel">Auto Connect</h3>
+                <p class="muted" id="settingAutoConnectHelp">Automatically connect to device on application launch</p>
               </div>
               <label class="switch">
-                <input type="checkbox" id="settingAutoConnect" checked />
+                <input type="checkbox" id="settingAutoConnect" checked aria-labelledby="settingAutoConnectLabel" aria-describedby="settingAutoConnectHelp" />
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <div>
-                <h3>Live Parameter Sync</h3>
-                <p class="muted">Apply parameter changes immediately without confirmation</p>
+                <h3 id="settingLiveSyncLabel">Live Parameter Sync</h3>
+                <p class="muted" id="settingLiveSyncHelp">Apply parameter changes immediately without confirmation</p>
               </div>
               <label class="switch">
-                <input type="checkbox" id="settingLiveSync" />
+                <input type="checkbox" id="settingLiveSync" aria-labelledby="settingLiveSyncLabel" aria-describedby="settingLiveSyncHelp" />
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <div>
-                <h3>Connection Alerts</h3>
-                <p class="muted">Show notifications when device connection is lost</p>
+                <h3 id="settingAlertsLabel">Connection Alerts</h3>
+                <p class="muted" id="settingAlertsHelp">Show notifications when device connection is lost</p>
               </div>
               <label class="switch">
-                <input type="checkbox" id="settingAlerts" checked />
+                <input type="checkbox" id="settingAlerts" checked aria-labelledby="settingAlertsLabel" aria-describedby="settingAlertsHelp" />
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <div>
-                <h3>Dark Mode</h3>
-                <p class="muted">Toggle between light and dark interface themes</p>
+                <h3 id="settingDarkModeLabel">Dark Mode</h3>
+                <p class="muted" id="settingDarkModeHelp">Toggle between light and dark interface themes</p>
               </div>
               <label class="switch">
-                <input type="checkbox" id="settingDarkMode" />
+                <input type="checkbox" id="settingDarkMode" aria-labelledby="settingDarkModeLabel" aria-describedby="settingDarkModeHelp" />
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <div>
-                <h3>High Contrast Mode</h3>
-                <p class="muted">Increase visual contrast for better accessibility</p>
+                <h3 id="settingHighContrastLabel">High Contrast Mode</h3>
+                <p class="muted" id="settingHighContrastHelp">Increase visual contrast for better accessibility</p>
               </div>
               <label class="switch">
-                <input type="checkbox" id="settingHighContrast" />
+                <input type="checkbox" id="settingHighContrast" aria-labelledby="settingHighContrastLabel" aria-describedby="settingHighContrastHelp" />
                 <span class="slider"></span>
               </label>
             </div>
@@ -720,7 +851,7 @@
       <div class="modal-header">
         <h3 id="profileModalTitle">Save Profile</h3>
         <button class="icon-btn" data-close-modal aria-label="Close">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -733,7 +864,7 @@
         </div>
         <div class="button-row">
           <button type="submit" class="btn btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
               <polyline points="17 21 17 13 7 13 7 21"/>
               <polyline points="7 3 7 8 15 8"/>
@@ -752,7 +883,7 @@
       <div class="modal-header">
         <h3 id="sessionModalTitle">Session Analysis</h3>
         <button class="icon-btn" data-close-modal aria-label="Close">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
@@ -761,11 +892,11 @@
       <div class="session-detail">
         <div class="summary" id="sessionSummary"></div>
         <div class="session-chart">
-          <canvas id="sessionCanvas"></canvas>
+          <canvas id="sessionCanvas" role="img" aria-label="Recorded tremor waveform chart"></canvas>
         </div>
         <div class="button-row">
           <button class="btn btn-secondary" id="exportCsvBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <line x1="16" y1="13" x2="8" y2="13"/>
@@ -774,14 +905,14 @@
             Export CSV
           </button>
           <button class="btn btn-secondary" id="exportJsonBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="16 18 22 12 16 6"/>
               <polyline points="8 6 2 12 8 18"/>
             </svg>
             Export JSON
           </button>
           <button class="btn btn-danger" id="deleteSessionBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             </svg>
