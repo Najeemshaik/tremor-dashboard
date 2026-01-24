@@ -158,6 +158,27 @@
   --chart-bg: linear-gradient(180deg, rgba(59, 130, 246, 0.08) 0%, rgba(34, 211, 238, 0.05) 100%);
 }
 
+/* High Contrast Mode */
+[data-contrast="high"] {
+  --text-secondary: #0b1220;
+  --text-muted: #1f2937;
+  --border-light: rgba(0, 0, 0, 0.2);
+  --border-medium: rgba(0, 0, 0, 0.3);
+  --border-strong: rgba(0, 0, 0, 0.4);
+  --divider: rgba(0, 0, 0, 0.25);
+  --chart-grid: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"][data-contrast="high"] {
+  --text-secondary: #f8fafc;
+  --text-muted: #e2e8f0;
+  --border-light: rgba(255, 255, 255, 0.25);
+  --border-medium: rgba(255, 255, 255, 0.35);
+  --border-strong: rgba(255, 255, 255, 0.45);
+  --divider: rgba(255, 255, 255, 0.3);
+  --chart-grid: rgba(255, 255, 255, 0.25);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    RESET & BASE STYLES
    ───────────────────────────────────────────────────────────────────────────── */
@@ -1013,24 +1034,34 @@ select {
 
 input[type="range"] {
   flex: 1;
-  height: 6px;
-  background: var(--bg-tertiary);
+  height: 24px;
+  background: transparent;
+  border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
 }
 
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  background: var(--border-medium);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   background: var(--accent-primary);
+  border: 2px solid var(--surface);
   border-radius: var(--radius-full);
   cursor: pointer;
-  box-shadow: var(--shadow-sm), 0 0 0 3px var(--surface);
+  box-shadow: var(--shadow-md), 0 0 0 4px var(--surface);
   transition: all var(--transition-base);
+  margin-top: -7px;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
@@ -1039,13 +1070,20 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   background: var(--accent-primary);
-  border: none;
+  border: 2px solid var(--surface);
   border-radius: var(--radius-full);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 10px;
+  background: var(--border-medium);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
 }
 
 input[type="range"]:focus {
@@ -1358,7 +1396,7 @@ input[type="range"]:focus::-webkit-slider-thumb {
 .chart-wrap {
   position: relative;
   width: 100%;
-  height: 280px;
+  height: 400px;
   background: var(--chart-bg);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
@@ -1398,6 +1436,87 @@ input[type="range"]:focus::-webkit-slider-thumb {
   transform: translateY(0);
 }
 
+.chart-wrap:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+.chart-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  align-items: start;
+}
+
+.chart-controls .control.toggle {
+  padding-top: 6px;
+}
+
+.chart-frame {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  column-gap: var(--space-3);
+  align-items: stretch;
+}
+
+.chart-y-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.chart-x-label {
+  margin-top: var(--space-2);
+  text-align: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.chart-controls .control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.chart-controls .control.toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.chart-controls .input-row.compact {
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.chart-controls .control-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.chart-controls label,
+.chart-controls .control.toggle .label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chart-controls .control.toggle .muted {
+  margin-top: 2px;
+  font-size: 0.8rem;
+}
+
 .chart-tooltip-header {
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -1427,12 +1546,64 @@ input[type="range"]:focus::-webkit-slider-thumb {
   color: var(--text-primary);
 }
 
+/* Spectrum */
+.spectrum-section {
+  margin-top: var(--space-4);
+}
+
+.spectrum-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.spectrum-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.sample-rate {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sample-rate strong {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.spectrum-wrap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  height: 160px;
+}
+
+.spectrum-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* Clinical Metrics Panel */
 .clinical-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-3);
   margin-top: var(--space-4);
+}
+
+.clinical-disclaimer {
+  margin-top: var(--space-4);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .clinical-metric {
@@ -1553,6 +1724,11 @@ input[type="range"]:focus::-webkit-slider-thumb {
 }
 
 .clinical-metric:hover .clinical-metric-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.clinical-metric:focus-within .clinical-metric-tooltip {
   opacity: 1;
   visibility: visible;
 }
@@ -2041,9 +2217,28 @@ input[type="range"]:focus::-webkit-slider-thumb {
 
 button:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: var(--z-toast);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus-visible {
+  top: var(--space-4);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
