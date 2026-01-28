@@ -26,9 +26,9 @@ const LATENCY_TEST_SAMPLE_WINDOW = 5;
 
 // Seed data for initial profiles
 const seedProfiles = [
-  { id: "p1", name: "PD Rest Tremor", updated: "2024-03-14 09:12", freq: 4.5, amp: 45, noise: 8 },
-  { id: "p2", name: "Essential Tremor", updated: "2024-03-18 15:44", freq: 6.5, amp: 35, noise: 15 },
-  { id: "p3", name: "Postural Tremor", updated: "2024-03-21 11:05", freq: 5.2, amp: 25, noise: 12 }
+  { id: "p1", name: "PD Rest Tremor", updated: "2024-03-14 09:12", freq: 5, amp: 45, noise: 8 },
+  { id: "p2", name: "Essential Tremor", updated: "2024-03-18 15:44", freq: 7, amp: 35, noise: 15 },
+  { id: "p3", name: "Postural Tremor", updated: "2024-03-21 11:05", freq: 5, amp: 25, noise: 12 }
 ];
 
 const seedSequences = [
@@ -36,16 +36,16 @@ const seedSequences = [
     id: "s1",
     name: "Medication Response",
     steps: [
-      { duration: 10, freq: 5.0, amp: 50, noise: 10 },
-      { duration: 15, freq: 4.5, amp: 35, noise: 8 },
-      { duration: 10, freq: 4.2, amp: 20, noise: 6 }
+      { duration: 10, freq: 5, amp: 50, noise: 10 },
+      { duration: 15, freq: 5, amp: 35, noise: 8 },
+      { duration: 10, freq: 4, amp: 20, noise: 6 }
     ]
   }
 ];
 
 const seedSessions = [
-  createSessionSeed("Morning Assessment", "2024-03-20 08:02", 420, 2100, 4.6, 42),
-  createSessionSeed("Post-Medication", "2024-03-21 16:28", 300, 1800, 4.2, 28)
+  createSessionSeed("Morning Assessment", "2024-03-20 08:02", 420, 2100, 5, 42),
+  createSessionSeed("Post-Medication", "2024-03-21 16:28", 300, 1800, 4, 28)
 ];
 
 const state = {
@@ -72,13 +72,13 @@ const state = {
     }
   },
   params: {
-    freq: 4.5,
+    freq: 5,
     amp: 40,
     noise: 12,
     enabled: true
   },
   lastSent: {
-    freq: 4.5,
+    freq: 5,
     amp: 40,
     noise: 12,
     enabled: true
@@ -276,7 +276,7 @@ function calculateDominantFrequency(samples, sampleRate) {
   let maxBin = 0;
   for (let k = 1; k < N / 2; k += 1) {
     const freq = (k * sampleRate) / N;
-    if (freq < 3 || freq > 8) continue;
+    if (freq < 4 || freq > 12) continue;
     let re = 0;
     let im = 0;
     const angleStep = (2 * Math.PI * k) / N;
@@ -1282,7 +1282,7 @@ function stopLoggingSampler() {
 // Parameter UI
 function updateParamUI() {
   elements.freqRange.value = state.params.freq;
-  elements.freqNumber.value = state.params.freq.toFixed(1);
+  elements.freqNumber.value = state.params.freq.toFixed(0);
   elements.ampRange.value = state.params.amp;
   elements.ampNumber.value = state.params.amp;
   elements.noiseRange.value = state.params.noise;
@@ -1318,7 +1318,7 @@ function handleParamChange(key, value) {
 
 function clampParam(key, value) {
   if (key === "freq") {
-    return Math.min(8, Math.max(3, value));
+    return Math.min(12, Math.max(4, Math.round(value)));
   }
   if (key === "amp") {
     return Math.min(100, Math.max(0, value));
@@ -1997,7 +1997,7 @@ function renderProfiles() {
     row.innerHTML = `
       <th scope="row"><strong>${profile.name}</strong></th>
       <td>${formatDate(profile.updated)}</td>
-      <td><span style="font-family: var(--font-mono)">${formatNumber(profile.freq, 1)}</span> Hz</td>
+      <td><span style="font-family: var(--font-mono)">${formatNumber(profile.freq, 0)}</span> Hz</td>
       <td><span style="font-family: var(--font-mono)">${Math.round(profile.amp)}</span></td>
       <td><span style="font-family: var(--font-mono)">${Math.round(profile.noise)}</span></td>
       <td>
@@ -2069,7 +2069,7 @@ function renderSequenceEditor() {
       return `
         <div class="step-row" data-index="${index}" style="animation-delay: ${index * 0.05}s">
           <input type="number" min="1" step="1" value="${step.duration}" data-field="duration" data-index="${index}" placeholder="Duration" aria-label="Step ${index + 1} duration in seconds" />
-          <input type="number" min="3" max="8" step="0.1" value="${step.freq}" data-field="freq" data-index="${index}" placeholder="Freq" aria-label="Step ${index + 1} frequency in hertz" />
+          <input type="number" min="4" max="12" step="1" value="${step.freq}" data-field="freq" data-index="${index}" placeholder="Freq" aria-label="Step ${index + 1} frequency in hertz" />
           <input type="number" min="0" max="100" step="1" value="${step.amp}" data-field="amp" data-index="${index}" placeholder="Amp" aria-label="Step ${index + 1} amplitude" />
           <input type="number" min="0" max="100" step="1" value="${step.noise}" data-field="noise" data-index="${index}" placeholder="Noise" aria-label="Step ${index + 1} noise level" />
           <div class="step-actions">
@@ -2349,8 +2349,8 @@ function bindSequenceEvents() {
       id: createId("sequence"),
       name: `Sequence ${state.sequences.length + 1}`,
       steps: [
-        { duration: 10, freq: 4.5, amp: 40, noise: 10 },
-        { duration: 10, freq: 5.0, amp: 50, noise: 12 }
+        { duration: 10, freq: 5, amp: 40, noise: 10 },
+        { duration: 10, freq: 6, amp: 50, noise: 12 }
       ]
     };
     state.sequences.unshift(newSequence);
@@ -2418,7 +2418,7 @@ function bindSequenceEvents() {
     if (!sequence) return;
 
     if (event.target.id === "addStepBtn" || event.target.closest("#addStepBtn")) {
-      sequence.steps.push({ duration: 10, freq: 4.5, amp: 40, noise: 10 });
+      sequence.steps.push({ duration: 10, freq: 5, amp: 40, noise: 10 });
       persist();
       renderSequences();
       return;
