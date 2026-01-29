@@ -226,7 +226,18 @@
               <div class="field" data-param="freq">
                 <label for="freqRange">Frequency (Hz)</label>
                 <div class="input-row">
-                  <input type="range" id="freqRange" min="4" max="12" step="1" />
+                  <input type="range" id="freqRange" min="4" max="12" step="1" list="freqTicks" />
+                  <datalist id="freqTicks">
+                    <option value="4"></option>
+                    <option value="5"></option>
+                    <option value="6"></option>
+                    <option value="7"></option>
+                    <option value="8"></option>
+                    <option value="9"></option>
+                    <option value="10"></option>
+                    <option value="11"></option>
+                    <option value="12"></option>
+                  </datalist>
                   <input type="number" id="freqNumber" min="4" max="12" step="1" />
                 </div>
               </div>
@@ -340,7 +351,7 @@
               <div class="spectrum-header">
                 <div>
                   <h3>Power Spectrum</h3>
-                  <p class="muted">Frequency Verification (2-12 Hz)</p>
+                  <p class="muted">Frequency Verification (4-12 Hz)</p>
                 </div>
                 <div class="spectrum-controls">
                   <div class="sample-rate">
@@ -414,7 +425,7 @@
                   <span>Power Spectral Density</span>
                 </div>
                 <div class="clinical-metric-tooltip" id="metricPowerHelp" role="tooltip">
-                  <p><strong>Power Spectral Density</strong><br>Total power in the tremor frequency band (3-8 Hz). Correlates with UPDRS tremor subscore. Used for monitoring medication efficacy.</p>
+                  <p><strong>Power Spectral Density</strong><br>Total power in the tremor frequency band (4-12 Hz). Correlates with UPDRS tremor subscore. Used for monitoring medication efficacy.</p>
                 </div>
               </div>
 

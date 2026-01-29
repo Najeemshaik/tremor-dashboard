@@ -137,6 +137,8 @@ const state = {
 const elements = {};
 let activeModal = null;
 let lastFocusedElement = null;
+let themeTransitionTimer = null;
+let themeFadeTimer = null;
 
 // Helper functions
 function $(selector, root = document) {
@@ -168,6 +170,15 @@ function formatDuration(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}m ${secs}s`;
+}
+
+function updateRangeFill(input) {
+  if (!input) return;
+  const min = Number.parseFloat(input.min ?? "0");
+  const max = Number.parseFloat(input.max ?? "100");
+  const value = Number.parseFloat(input.value ?? "0");
+  const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+  input.style.setProperty("--range-fill", `${percent}%`);
 }
 
 function createId(prefix) {
@@ -318,6 +329,20 @@ function initContrast() {
 }
 
 function applyTheme() {
+  if (themeTransitionTimer) {
+    clearTimeout(themeTransitionTimer);
+  }
+  document.documentElement.classList.add("theme-transition");
+  const fade = document.querySelector(".theme-fade");
+  if (fade) {
+    fade.classList.add("active");
+    if (themeFadeTimer) {
+      clearTimeout(themeFadeTimer);
+    }
+    themeFadeTimer = window.setTimeout(() => {
+      fade.classList.remove("active");
+    }, 220);
+  }
   document.documentElement.setAttribute("data-theme", state.theme);
 
   const lightIcon = $("#themeIconLight");
@@ -339,6 +364,9 @@ function applyTheme() {
   }
 
   window.localStorage.setItem(THEME_KEY, state.theme);
+  themeTransitionTimer = window.setTimeout(() => {
+    document.documentElement.classList.remove("theme-transition");
+  }, 560);
 }
 
 function applyContrast() {
@@ -1289,6 +1317,10 @@ function updateParamUI() {
   elements.noiseNumber.value = state.params.noise;
   elements.enableTremor.checked = state.params.enabled;
 
+  updateRangeFill(elements.freqRange);
+  updateRangeFill(elements.ampRange);
+  updateRangeFill(elements.noiseRange);
+
   const dirty = isDirty();
   elements.unsavedIndicator.style.display = dirty ? "inline-flex" : "none";
 }
@@ -1332,21 +1364,27 @@ function clampParam(key, value) {
 function bindParamInputs() {
   elements.freqRange.addEventListener("input", (event) => {
     handleParamChange("freq", Number(event.target.value));
+    updateRangeFill(event.target);
   });
   elements.freqNumber.addEventListener("input", (event) => {
     handleParamChange("freq", Number(event.target.value));
+    updateRangeFill(elements.freqRange);
   });
   elements.ampRange.addEventListener("input", (event) => {
     handleParamChange("amp", Number(event.target.value));
+    updateRangeFill(event.target);
   });
   elements.ampNumber.addEventListener("input", (event) => {
     handleParamChange("amp", Number(event.target.value));
+    updateRangeFill(elements.ampRange);
   });
   elements.noiseRange.addEventListener("input", (event) => {
     handleParamChange("noise", Number(event.target.value));
+    updateRangeFill(event.target);
   });
   elements.noiseNumber.addEventListener("input", (event) => {
     handleParamChange("noise", Number(event.target.value));
+    updateRangeFill(elements.noiseRange);
   });
   elements.enableTremor.addEventListener("change", (event) => {
     state.params.enabled = event.target.checked;
@@ -1378,12 +1416,14 @@ function getTargetBufferLength() {
 function updateChartControls() {
   if (elements.windowRange) {
     elements.windowRange.value = String(state.visualization.windowSeconds);
+    updateRangeFill(elements.windowRange);
   }
   if (elements.windowValue) {
     elements.windowValue.textContent = `${state.visualization.windowSeconds.toFixed(1)}s`;
   }
   if (elements.gainRange) {
     elements.gainRange.value = String(state.visualization.gain.toFixed(1));
+    updateRangeFill(elements.gainRange);
   }
   if (elements.gainValue) {
     elements.gainValue.textContent = `${state.visualization.gain.toFixed(1)}x`;
@@ -1662,7 +1702,7 @@ function drawSpectrum() {
   const spectrum = calculateSpectrum(state.visualization.buffer, state.visualization.sampleRate);
   if (spectrum.length === 0) return;
 
-  const band = spectrum.filter((bin) => bin.freq >= 2 && bin.freq <= 12);
+  const band = spectrum.filter((bin) => bin.freq >= 4 && bin.freq <= 12);
   const maxMag = Math.max(...band.map((bin) => bin.mag), 1);
 
   ctx.strokeStyle = chartSecondary;
@@ -2729,6 +2769,13 @@ function bindSettingsEvents() {
 
 // Initialize
 function init() {
+  if (!document.querySelector(".theme-fade")) {
+    const fade = document.createElement("div");
+    fade.className = "theme-fade";
+    fade.setAttribute("aria-hidden", "true");
+    document.body.appendChild(fade);
+  }
+
   bindElements();
   loadData();
   initTheme();
@@ -2802,6 +2849,7 @@ function init() {
         state.visualization.buffer.shift();
       }
       updateChartControls();
+      updateRangeFill(event.target);
     });
   }
 
@@ -2809,6 +2857,7 @@ function init() {
     elements.gainRange.addEventListener("input", (event) => {
       state.visualization.gain = Number(event.target.value);
       updateChartControls();
+      updateRangeFill(event.target);
     });
   }
 
@@ -2832,6 +2881,7 @@ function init() {
   renderSessions();
   updateQuickProfileSelection();
   updateChartControls();
+  $$('input[type="range"]').forEach(updateRangeFill);
   state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   setupVisualization();
 }
