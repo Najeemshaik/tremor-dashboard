@@ -1,0 +1,17 @@
+{
+  "name": "tremor-dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:vm": "npm run build && node dist/src/tests/viewmodelHarness.js"
+  },
+  "devDependencies": {
+    "@types/web-bluetooth": "^0.0.21",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}

@@ -20,12 +20,12 @@ The app expects a BLE GATT service with:
 - Control characteristic (write): receives JSON commands.
 - Telemetry characteristic (notify, optional): sends samples/metrics.
 
-Default UUIDs live in `app.js` under `BLE_CONFIG`.
+Default UUIDs live in `src/services/bluetooth/bleConfig.ts` under `BLE_CONFIG`.
 
 Update these constants to match your device:
 
 ```js
-const BLE_CONFIG = {
+export const BLE_CONFIG = {
   deviceNamePrefix: "Tremor",
   serviceUUID: "0000fff0-0000-1000-8000-00805f9b34fb",
   controlCharUUID: "0000fff1-0000-1000-8000-00805f9b34fb",
@@ -75,8 +75,8 @@ The dashboard sends JSON commands to the control characteristic:
 { "type": "stop" }
 ```
 
-If your firmware expects a different format, update the JSON in `app.js`
-inside `sendBluetoothCommand`.
+If your firmware expects a different format, update the JSON in
+`src/services/bluetooth/bluetoothService.ts` inside `sendCommand`.
 
 ## 5) Telemetry Payloads
 
@@ -96,7 +96,7 @@ or:
 
 - Or a single `float32`/`int16` sample in little-endian format.
 
-Telemetry is parsed in `parseTelemetryValue` in `app.js`.
+Telemetry is parsed in `parseTelemetryValue` in `src/services/bluetooth/bleUtils.ts`.
 
 ## 6) Troubleshooting
 
@@ -114,4 +114,3 @@ Telemetry is parsed in `parseTelemetryValue` in `app.js`.
 
 - Android + Chrome works if the page is HTTPS.
 - iOS Safari does not support Web Bluetooth.
-
