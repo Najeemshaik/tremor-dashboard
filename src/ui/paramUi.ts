@@ -24,7 +24,18 @@ export function updateParamUI(state: AppState, elements: Elements) {
   updateRangeFill(elements.noiseRange);
 
   const dirty = isDirty(state);
+  const isApplied = Boolean(state.lastSentAt) && !dirty;
   elements.unsavedIndicator.style.display = dirty ? "inline-flex" : "none";
+  elements.paramStatus.style.display = dirty ? "none" : "inline-flex";
+  elements.paramCard.classList.toggle("is-stale", !isApplied);
+  if (dirty) return;
+  if (isApplied) {
+    elements.paramStatus.textContent = "Active";
+    elements.paramStatus.dataset.status = "active";
+    return;
+  }
+  elements.paramStatus.textContent = "Inactive";
+  elements.paramStatus.dataset.status = "inactive";
 }
 
 export function updateLastSentUI(state: AppState, elements: Elements) {

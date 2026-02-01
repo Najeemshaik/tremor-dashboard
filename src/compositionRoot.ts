@@ -72,7 +72,9 @@ export function createAppDependencies(): AppDependencies {
     onOpenCreate: () => profilesViewModel.handleOpenCreate(),
     onSubmitCreate: (name) => profilesViewModel.handleSubmitCreate(name),
     onQuickLoad: (id) => profilesViewModel.handleQuickLoad(id),
-    onAction: (action, id) => profilesViewModel.handleAction(action, id)
+    onAction: (action, id) => profilesViewModel.handleAction(action, id),
+    onImport: (file) => profilesViewModel.handleImport(file),
+    onExport: () => profilesViewModel.handleExport()
   });
 
   const sequencesView = new SequencesView({

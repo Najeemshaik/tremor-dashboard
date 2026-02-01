@@ -39,3 +39,18 @@ export function exportSessionJSON(session: {
   const json = JSON.stringify(data, null, 2);
   downloadFile(`${session.name.replace(/\s+/g, "_")}.json`, json, "application/json");
 }
+
+export function exportProfilesJSON(profiles: {
+  name: string;
+  updated: string;
+  freq: number;
+  amp: number;
+  noise: number;
+}[]) {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    profiles
+  };
+  const json = JSON.stringify(data, null, 2);
+  downloadFile("tremor_profiles.json", json, "application/json");
+}

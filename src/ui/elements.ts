@@ -42,6 +42,8 @@ export type Elements = {
   stopBtn: HTMLButtonElement;
   lastSent: HTMLElement;
   unsavedIndicator: HTMLElement;
+  paramCard: HTMLElement;
+  paramStatus: HTMLElement;
 
   freezeBtn: HTMLButtonElement;
   clearBtn: HTMLButtonElement;
@@ -83,6 +85,8 @@ export type Elements = {
   profileSelect: HTMLSelectElement;
   loadProfileBtn: HTMLButtonElement;
   saveProfileBtn: HTMLButtonElement;
+  importProfilesBtn: HTMLButtonElement;
+  exportProfilesBtn: HTMLButtonElement;
   profilesTable: HTMLElement;
   profilesEmpty: HTMLElement;
   profileModal: HTMLElement;
