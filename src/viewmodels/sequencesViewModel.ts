@@ -124,8 +124,9 @@ export class SequencesViewModel {
     if (!sequence) return;
 
     if (payload.action === "add-step") {
-      this.store.update(() => {
+      this.store.update((state) => {
         sequence.steps.push({ duration: 10, freq: 5, amp: 40, noise: 10 });
+        state.sequences = [...state.sequences];
       });
       this.persist();
       return;
@@ -133,24 +134,27 @@ export class SequencesViewModel {
 
     const index = payload.index ?? -1;
     if (payload.action === "up" && index > 0) {
-      this.store.update(() => {
+      this.store.update((state) => {
         [sequence.steps[index - 1], sequence.steps[index]] = [
           sequence.steps[index],
           sequence.steps[index - 1]
         ];
+        state.sequences = [...state.sequences];
       });
     }
     if (payload.action === "down" && index < sequence.steps.length - 1) {
-      this.store.update(() => {
+      this.store.update((state) => {
         [sequence.steps[index + 1], sequence.steps[index]] = [
           sequence.steps[index],
           sequence.steps[index + 1]
         ];
+        state.sequences = [...state.sequences];
       });
     }
     if (payload.action === "remove") {
-      this.store.update(() => {
+      this.store.update((state) => {
         sequence.steps.splice(index, 1);
+        state.sequences = [...state.sequences];
       });
     }
     if (payload.action === "seq-play") {

@@ -215,8 +215,10 @@ export class SequencesView {
 
     this.elements.sequenceList.addEventListener("click", (event: Event) => {
       const target = event.target as HTMLElement;
-      const action = target.dataset.action;
-      const id = target.dataset.id;
+      const actionTarget = target.closest("[data-action][data-id]") as HTMLElement | null;
+      if (!actionTarget) return;
+      const action = actionTarget.dataset.action;
+      const id = actionTarget.dataset.id;
       if (!action || !id) return;
       this.onListAction(action, id);
     });
@@ -225,6 +227,7 @@ export class SequencesView {
       const target = event.target as HTMLInputElement;
       if (target.id === "sequenceName") {
         this.onEditorInput({ field: "sequenceName", value: target.value });
+        this.updateActiveListName(target.value);
         return;
       }
       const field = target.dataset.field;
@@ -234,6 +237,9 @@ export class SequencesView {
         index: Number.isNaN(index) ? undefined : index,
         value: target.value
       });
+      if (field === "duration") {
+        this.updateActiveListSummary();
+      }
     });
 
     this.elements.sequenceEditor.addEventListener("click", (event: Event) => {
@@ -243,13 +249,38 @@ export class SequencesView {
         return;
       }
 
-      const action = target.dataset.action;
-      const index = Number(target.dataset.index);
+      const actionTarget = target.closest("[data-action]") as HTMLElement | null;
+      if (!actionTarget) return;
+      const action = actionTarget.dataset.action;
+      const index = Number(actionTarget.dataset.index);
       if (!action) return;
       this.onEditorAction({
         action,
         index: Number.isNaN(index) ? undefined : index
       });
     });
+  }
+
+  private updateActiveListName(name: string) {
+    const activeItem = this.elements.sequenceList.querySelector(".list-item.active");
+    const title = activeItem?.querySelector(".list-title");
+    if (title) {
+      title.textContent = name.trim() || "Untitled Sequence";
+    }
+  }
+
+  private updateActiveListSummary() {
+    const activeItem = this.elements.sequenceList.querySelector(".list-item.active");
+    const summary = activeItem?.querySelector(".list-sub");
+    if (!summary) return;
+    const durationInputs = this.elements.sequenceEditor.querySelectorAll<HTMLInputElement>(
+      'input[data-field="duration"]'
+    );
+    const totalDuration = Array.from(durationInputs).reduce(
+      (sum, input) => sum + (Number(input.value) || 0),
+      0
+    );
+    const stepCount = durationInputs.length;
+    summary.textContent = `${stepCount} steps · ${totalDuration}s total`;
   }
 }

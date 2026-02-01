@@ -164,17 +164,42 @@ export class VisualizationView {
 
     const posX = x ?? (rect.width * index) / data.length;
     const posY = y ?? rect.height / 2;
-    tooltip.style.left = `${posX + 12}px`;
-    tooltip.style.top = `${posY - 12}px`;
-    tooltip.innerHTML = `
-      <strong>${amplitude}</strong>
-      <div>${timeSeconds.toFixed(2)}s</div>
-    `;
+    const padding = 12;
+    let left = posX + padding;
+    let top = posY - padding;
+    const tooltipWidth = tooltip.offsetWidth;
+    const tooltipHeight = tooltip.offsetHeight;
+
+    if (left + tooltipWidth + padding > rect.width) {
+      left = rect.width - tooltipWidth - padding;
+    }
+    if (left < padding) {
+      left = padding;
+    }
+    if (top + tooltipHeight + padding > rect.height) {
+      top = rect.height - tooltipHeight - padding;
+    }
+    if (top < padding) {
+      top = padding;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    const amplitudeEl = tooltip.querySelector<HTMLElement>("#tooltipAmplitude");
+    const timeEl = tooltip.querySelector<HTMLElement>("#tooltipTime");
+    const phaseEl = tooltip.querySelector<HTMLElement>("#tooltipPhase");
+    if (amplitudeEl) amplitudeEl.textContent = amplitude;
+    if (timeEl) timeEl.textContent = `${timeSeconds.toFixed(2)}s`;
+    if (phaseEl) {
+      const phase = (timeSeconds * this.state.params.freq * 360) % 360;
+      phaseEl.textContent = `${this.formatNumber(phase, 0)}°`;
+    }
 
     if (this.elements.chartLive) {
+      const phaseText = this.formatNumber((timeSeconds * this.state.params.freq * 360) % 360, 0);
       this.elements.chartLive.textContent = `Amplitude ${amplitude}, time ${timeSeconds.toFixed(
         2
-      )} seconds.`;
+      )} seconds, phase ${phaseText} degrees.`;
     }
   }
 

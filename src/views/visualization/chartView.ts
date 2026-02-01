@@ -176,8 +176,8 @@ export class ChartView {
         const y = mid - data[index] * scale;
 
         ctx.strokeStyle = chartGridStrong;
-        ctx.lineWidth = 1.8;
-        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
@@ -186,7 +186,7 @@ export class ChartView {
 
         ctx.fillStyle = chartPrimary;
         ctx.beginPath();
-        ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+        ctx.arc(x, y, 9, 0, Math.PI * 2);
         ctx.fill();
       }
     }

@@ -7,7 +7,7 @@ export type ConnectionViewPort = {
 };
 
 export type ProfilesViewPort = {
-  render: (profiles: AppState["profiles"]) => void;
+  render: (profiles: AppState["profiles"], activeProfileId: string | null) => void;
   updateQuickProfileSelection: (profileId: string | null) => void;
   openCreateModal: () => void;
   closeCreateModal: () => void;

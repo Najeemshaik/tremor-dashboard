@@ -46,6 +46,8 @@ export function bindElements(): Elements {
     stopBtn: $("#stopBtn") as HTMLButtonElement,
     lastSent: $("#lastSent") as HTMLElement,
     unsavedIndicator: $("#unsavedIndicator") as HTMLElement,
+    paramCard: $("#paramCard") as HTMLElement,
+    paramStatus: $("#paramStatus") as HTMLElement,
 
     freezeBtn: $("#freezeBtn") as HTMLButtonElement,
     clearBtn: $("#clearBtn") as HTMLButtonElement,
@@ -87,6 +89,8 @@ export function bindElements(): Elements {
     profileSelect: $("#profileSelect") as HTMLSelectElement,
     loadProfileBtn: $("#loadProfileBtn") as HTMLButtonElement,
     saveProfileBtn: $("#saveProfileBtn") as HTMLButtonElement,
+    importProfilesBtn: $("#importProfilesBtn") as HTMLButtonElement,
+    exportProfilesBtn: $("#exportProfilesBtn") as HTMLButtonElement,
     profilesTable: $("#profilesTable tbody") as HTMLElement,
     profilesEmpty: $("#profilesEmpty") as HTMLElement,
     profileModal: $("#profileModal") as HTMLElement,

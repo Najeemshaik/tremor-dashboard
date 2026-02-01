@@ -10,6 +10,8 @@ export class ProfilesView {
   private onSubmitCreate: (name: string) => void;
   private onQuickLoad: (id: string) => void;
   private onAction: (action: string, id: string) => void;
+  private onImport: (file: File) => void;
+  private onExport: () => void;
 
   constructor(options: {
     elements: Elements;
@@ -18,6 +20,8 @@ export class ProfilesView {
     onSubmitCreate: (name: string) => void;
     onQuickLoad: (id: string) => void;
     onAction: (action: string, id: string) => void;
+    onImport: (file: File) => void;
+    onExport: () => void;
   }) {
     this.elements = options.elements;
     this.modalManager = options.modalManager;
@@ -25,9 +29,11 @@ export class ProfilesView {
     this.onSubmitCreate = options.onSubmitCreate;
     this.onQuickLoad = options.onQuickLoad;
     this.onAction = options.onAction;
+    this.onImport = options.onImport;
+    this.onExport = options.onExport;
   }
 
-  render(profiles: Profile[]) {
+  render(profiles: Profile[], activeProfileId: string | null) {
     this.elements.profileSelect.innerHTML = "";
     if (profiles.length === 0) {
       const option = document.createElement("option");
@@ -52,9 +58,15 @@ export class ProfilesView {
     this.elements.profilesEmpty.classList.add("hidden");
 
     profiles.forEach((profile: Profile) => {
+      const isActive = profile.id === activeProfileId;
       const row = document.createElement("tr");
       row.innerHTML = `
-        <th scope="row"><strong>${profile.name}</strong></th>
+        <th scope="row">
+          <div class="profile-name">
+            <strong>${profile.name}</strong>
+            ${isActive ? '<span class="status-pill compact" data-status="active">Active</span>' : ""}
+          </div>
+        </th>
         <td>${formatDate(profile.updated)}</td>
         <td><span style="font-family: var(--font-mono)">${formatNumber(profile.freq, 0)}</span> Hz</td>
         <td><span style="font-family: var(--font-mono)">${Math.round(profile.amp)}</span></td>
@@ -94,6 +106,21 @@ export class ProfilesView {
     this.elements.loadProfileBtn.addEventListener("click", () => {
       const selected = this.elements.profileSelect.value;
       if (selected) this.onQuickLoad(selected);
+    });
+
+    this.elements.importProfilesBtn.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "application/json,.json";
+      input.addEventListener("change", () => {
+        const file = input.files?.[0];
+        if (file) this.onImport(file);
+      });
+      input.click();
+    });
+
+    this.elements.exportProfilesBtn.addEventListener("click", () => {
+      this.onExport();
     });
 
     this.elements.profilesTable.addEventListener("click", (event: Event) => {

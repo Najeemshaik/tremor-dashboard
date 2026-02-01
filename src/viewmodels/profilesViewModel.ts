@@ -1,6 +1,7 @@
 import { createId } from "../core/id.js";
 import type { AppState, Profile } from "../state/types.js";
 import type { Store } from "../state/store.js";
+import { exportProfilesJSON } from "../services/export/exportService.js";
 import type { ProfilesViewPort } from "./ports.js";
 
 export class ProfilesViewModel {
@@ -26,7 +27,7 @@ export class ProfilesViewModel {
   }
 
   renderProfiles() {
-    this.profilesView.render(this.state.profiles);
+    this.profilesView.render(this.state.profiles, this.getActiveProfileId());
   }
 
   updateQuickProfileSelection() {
@@ -102,7 +103,84 @@ export class ProfilesViewModel {
     this.persist();
   }
 
+  handleExport() {
+    const profiles = this.state.profiles.map((profile) => ({
+      name: profile.name,
+      updated: profile.updated,
+      freq: profile.freq,
+      amp: profile.amp,
+      noise: profile.noise
+    }));
+    exportProfilesJSON(profiles);
+  }
+
+  async handleImport(file: File) {
+    try {
+      const content = await file.text();
+      const parsed = JSON.parse(content) as unknown;
+      const incoming = Array.isArray(parsed)
+        ? parsed
+        : (parsed as { profiles?: unknown }).profiles;
+
+      if (!Array.isArray(incoming)) {
+        window.alert("Invalid profile file. Expected a profiles array.");
+        return;
+      }
+
+      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+      const imported = incoming
+        .map((item) => this.normalizeProfile(item, now))
+        .filter((profile): profile is Profile => profile !== null);
+
+      if (imported.length === 0) {
+        window.alert("No valid profiles found to import.");
+        return;
+      }
+
+      this.store.update((state) => {
+        state.profiles = [...imported, ...state.profiles];
+      });
+      this.persist();
+      this.updateQuickProfileSelection();
+    } catch (error) {
+      window.alert("Unable to import profiles. Please check the file format.");
+    }
+  }
+
   private findProfile(id: string) {
     return this.state.profiles.find((item) => item.id === id);
+  }
+
+  private getActiveProfileId() {
+    const params = this.state.params;
+    const match = this.state.profiles.find(
+      (profile) =>
+        profile.freq === params.freq &&
+        profile.amp === params.amp &&
+        profile.noise === params.noise
+    );
+    return match?.id ?? null;
+  }
+
+  private normalizeProfile(item: unknown, fallbackUpdated: string): Profile | null {
+    if (!item || typeof item !== "object") return null;
+    const candidate = item as Partial<Profile>;
+    const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
+    const freq = Number(candidate.freq);
+    const amp = Number(candidate.amp);
+    const noise = Number(candidate.noise);
+
+    if (!name || !Number.isFinite(freq) || !Number.isFinite(amp) || !Number.isFinite(noise)) {
+      return null;
+    }
+
+    return {
+      id: createId("profile"),
+      name,
+      updated: typeof candidate.updated === "string" ? candidate.updated : fallbackUpdated,
+      freq,
+      amp,
+      noise
+    };
   }
 }

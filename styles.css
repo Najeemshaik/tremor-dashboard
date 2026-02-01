@@ -948,6 +948,12 @@ a:hover {
   gap: var(--space-4);
 }
 
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .card-header h2,
 .card-header h3 {
   font-size: 1.1rem;
@@ -1041,6 +1047,33 @@ a:hover {
 .status-pill[data-status="disconnected"] {
   background: var(--danger-light);
   color: var(--danger-dark);
+}
+
+.status-pill[data-status="active"] {
+  background: var(--success-light);
+  color: var(--success-dark);
+}
+
+.status-pill[data-status="inactive"] {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+}
+
+.status-pill.compact {
+  padding: 2px 8px;
+  font-size: 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+.status-pill.compact::before {
+  width: 6px;
+  height: 6px;
+}
+
+.profile-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .warning-text {
@@ -1202,6 +1235,46 @@ input[type="range"]:focus {
 
 input[type="range"]:focus::-webkit-slider-thumb {
   box-shadow: var(--shadow-md), 0 0 0 4px var(--surface), var(--shadow-glow);
+}
+
+/* Parameter stale state */
+.param-card.is-stale .field-group,
+.param-card.is-stale .toggle-row,
+.param-card.is-stale .meta-row {
+  opacity: 0.6;
+}
+
+.param-card.is-stale .field label,
+.param-card.is-stale .label {
+  color: var(--text-muted);
+}
+
+.param-card.is-stale input[type="number"] {
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border-color: var(--border-light);
+}
+
+.param-card.is-stale input[type="range"]::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(90deg, var(--border-strong) 0%, var(--border-medium) 100%) 0/var(--range-fill) 100% no-repeat,
+    var(--border-light);
+}
+
+.param-card.is-stale input[type="range"]::-webkit-slider-thumb {
+  background: var(--text-muted);
+  box-shadow: var(--shadow-sm), 0 0 0 4px var(--surface);
+}
+
+.param-card.is-stale input[type="range"]::-moz-range-track {
+  background:
+    linear-gradient(90deg, var(--border-strong) 0%, var(--border-medium) 100%) 0/var(--range-fill) 100% no-repeat,
+    var(--border-light);
+}
+
+.param-card.is-stale input[type="range"]::-moz-range-thumb {
+  background: var(--text-muted);
+  box-shadow: var(--shadow-sm);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -1542,17 +1615,7 @@ input[type="range"]:focus::-webkit-slider-thumb {
 }
 
 .chart-tooltip::after {
-  content: "";
-  position: absolute;
-  left: 24px;
-  bottom: -8px;
-  width: 14px;
-  height: 14px;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-medium);
-  border-top: none;
-  border-left: none;
-  transform: rotate(45deg);
+  display: none;
 }
 
 .chart-tooltip.visible {

@@ -28,7 +28,7 @@ let renderedSequences: any = null;
 let selectedProfileId: string | null = null;
 
 const profilesView: ProfilesViewPort = {
-  render: (profiles) => {
+  render: (profiles, _activeProfileId) => {
     renderedProfiles = profiles;
   },
   updateQuickProfileSelection: (profileId) => {
