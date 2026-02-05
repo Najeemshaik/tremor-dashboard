@@ -1,7 +1,7 @@
 /* global window, document */
 
 import { seedProfiles, seedSequences, seedSessions } from "./state/seedData.js";
-import { loadStoredData } from "./services/storage/storageService.js";
+import { SqliteStorageService } from "./services/database/sqliteStorageService.js";
 import type { AppState } from "./state/types.js";
 import { shallowEqualArray, shallowEqualObject, type Store } from "./state/store.js";
 import type { Elements } from "./ui/elements.js";
@@ -52,6 +52,7 @@ let sequencesViewModel!: SequencesViewModel;
 let mockTelemetry!: MockTelemetryService;
 let bluetoothService!: BluetoothService;
 let mockConnection!: MockConnectionService;
+let sqliteStorage!: SqliteStorageService;
 
 export type AppDependencies = {
   store: Store<AppState>;
@@ -74,6 +75,7 @@ export type AppDependencies = {
   sessionsViewModel: SessionsViewModel;
   profilesViewModel: ProfilesViewModel;
   sequencesViewModel: SequencesViewModel;
+  sqliteStorage: SqliteStorageService;
 };
 
 export function configureApp(deps: AppDependencies) {
@@ -98,11 +100,12 @@ export function configureApp(deps: AppDependencies) {
   sessionsViewModel = deps.sessionsViewModel;
   profilesViewModel = deps.profilesViewModel;
   sequencesViewModel = deps.sequencesViewModel;
+  sqliteStorage = deps.sqliteStorage;
 }
 
 // Data persistence
 function loadData() {
-  const parsed = loadStoredData();
+  const parsed = sqliteStorage.loadStoredData();
   if (parsed) {
     const stored = parsed as any;
     store.update((state) => {

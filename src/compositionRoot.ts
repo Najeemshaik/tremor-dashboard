@@ -4,7 +4,11 @@ import { BLE_CONFIG } from "./services/bluetooth/bleConfig.js";
 import { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
-import { persistStoredData } from "./services/storage/storageService.js";
+import { DatabaseService } from "./services/database/database.js";
+import { createProfileRepository } from "./services/database/repositories/profileRepository.js";
+import { createSequenceRepository } from "./services/database/repositories/sequenceRepository.js";
+import { createSessionRepository } from "./services/database/repositories/sessionRepository.js";
+import { SqliteStorageService } from "./services/database/sqliteStorageService.js";
 import { ConnectionView } from "./views/connectionView.js";
 import { ModalManager } from "./views/modalManager.js";
 import { TabsView } from "./views/tabsView.js";
@@ -24,10 +28,21 @@ import { bindElements } from "./ui/bindElements.js";
 import { updateLastSentUI, updateParamUI } from "./ui/paramUi.js";
 import type { AppDependencies } from "./app.js";
 
-export function createAppDependencies(): AppDependencies {
+export async function createAppDependencies(): Promise<AppDependencies> {
   const store = createStore(createInitialState());
   const state = store.getState();
   const elements = bindElements();
+  const database = new DatabaseService();
+  await database.init();
+  const profileRepository = createProfileRepository(database.getDb());
+  const sequenceRepository = createSequenceRepository(database.getDb());
+  const sessionRepository = createSessionRepository(database.getDb());
+  const sqliteStorage = new SqliteStorageService({
+    database,
+    profileRepository,
+    sequenceRepository,
+    sessionRepository
+  });
 
   let connectionView: ConnectionView;
   let visualizationView: VisualizationView;
@@ -111,7 +126,7 @@ export function createAppDependencies(): AppDependencies {
   });
 
   const persist = () => {
-    persistStoredData({
+    sqliteStorage.persistStoredData({
       profiles: state.profiles,
       sequences: state.sequences,
       sessions: state.sessions
@@ -179,6 +194,7 @@ export function createAppDependencies(): AppDependencies {
     visualizationViewModel,
     sessionsViewModel,
     profilesViewModel,
-    sequencesViewModel
+    sequencesViewModel,
+    sqliteStorage
   };
 }

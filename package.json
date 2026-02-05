@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
+    "postinstall": "mkdir -p lib && cp node_modules/sql.js/dist/sql-wasm.wasm lib/",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:vm": "npm run build && node dist/src/tests/viewmodelHarness.js"
@@ -13,5 +14,8 @@
     "@types/web-bluetooth": "^0.0.21",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.10.2"
   }
 }
