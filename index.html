@@ -853,6 +853,21 @@
                 <span class="slider"></span>
               </label>
             </div>
+            <div class="setting-item">
+              <div>
+                <h3 id="settingDataFolderLabel">Data Folder</h3>
+                <p class="muted" id="settingDataFolderHelp">Choose where profiles, sequences, and sessions are stored.</p>
+                <p class="muted setting-status" id="dataFolderStatus" aria-live="polite">No folder selected. Data is stored in browser storage.</p>
+              </div>
+              <div class="setting-actions">
+                <button type="button" class="btn btn-secondary" id="selectDataFolderBtn" aria-labelledby="settingDataFolderLabel settingDataFolderHelp">
+                  Choose Folder
+                </button>
+                <button type="button" class="btn btn-ghost" id="clearDataFolderBtn" aria-labelledby="settingDataFolderLabel settingDataFolderHelp">
+                  Use Browser Storage
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

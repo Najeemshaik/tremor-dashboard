@@ -109,4 +109,7 @@ export type Elements = {
 
   settingDarkMode: HTMLInputElement | null;
   settingHighContrast: HTMLInputElement | null;
+  selectDataFolderBtn: HTMLButtonElement | null;
+  clearDataFolderBtn: HTMLButtonElement | null;
+  dataFolderStatus: HTMLElement | null;
 };

@@ -112,6 +112,9 @@ export function bindElements(): Elements {
     exportJsonBtn: $("#exportJsonBtn") as HTMLButtonElement,
 
     settingDarkMode: $("#settingDarkMode") as HTMLInputElement | null,
-    settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null
+    settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null,
+    selectDataFolderBtn: $("#selectDataFolderBtn") as HTMLButtonElement | null,
+    clearDataFolderBtn: $("#clearDataFolderBtn") as HTMLButtonElement | null,
+    dataFolderStatus: $("#dataFolderStatus")
   };
 }

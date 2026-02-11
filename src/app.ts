@@ -1,6 +1,15 @@
 /* global window, document */
 
 import { seedProfiles, seedSequences, seedSessions } from "./state/seedData.js";
+import {
+  clearStorageDirectory,
+  getStorageStatus,
+  loadStoredData,
+  loadStoredDataFromDirectory,
+  persistStoredData,
+  pickStorageDirectory,
+  type StoredPayload
+} from "./services/storage/storageService.js";
 import { SqliteStorageService } from "./services/database/sqliteStorageService.js";
 import type { AppState } from "./state/types.js";
 import { shallowEqualArray, shallowEqualObject, type Store } from "./state/store.js";
@@ -104,8 +113,15 @@ export function configureApp(deps: AppDependencies) {
 }
 
 // Data persistence
-function loadData() {
-  const parsed = sqliteStorage.loadStoredData();
+function getPersistableData(): StoredPayload {
+  return {
+    profiles: state.profiles,
+    sequences: state.sequences,
+    sessions: state.sessions
+  };
+}
+
+function applyStoredData(parsed: StoredPayload | null) {
   if (parsed) {
     const stored = parsed as any;
     store.update((state) => {
@@ -122,6 +138,82 @@ function loadData() {
   });
 }
 
+async function loadData() {
+  try {
+    const parsed = await loadStoredData();
+    if (parsed) {
+      applyStoredData(parsed);
+      return;
+    }
+  } catch (error) {
+    // Continue with sqlite fallback.
+  }
+
+  const sqliteParsed = sqliteStorage.loadStoredData();
+  applyStoredData(sqliteParsed);
+}
+
+async function refreshStorageStatusUI() {
+  if (!elements.dataFolderStatus) return;
+  let status;
+  try {
+    status = await getStorageStatus();
+  } catch (error) {
+    elements.dataFolderStatus.textContent = "Unable to read storage status. Data is stored in browser storage.";
+    if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = true;
+    if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = true;
+    return;
+  }
+  if (!status.supportsDirectoryPicker) {
+    elements.dataFolderStatus.textContent =
+      "Folder picker is unavailable in this browser/context. Data is stored in browser storage.";
+    if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = true;
+    if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = true;
+    return;
+  }
+
+  if (status.usingDirectory) {
+    const directoryName = status.directoryName ?? "selected folder";
+    elements.dataFolderStatus.textContent = `Saving data to folder: ${directoryName}`;
+  } else if (status.directoryName) {
+    elements.dataFolderStatus.textContent =
+      `Folder linked (${status.directoryName}) but permission is not currently granted. Choose Folder again to re-authorize.`;
+  } else {
+    elements.dataFolderStatus.textContent = "No folder selected. Data is stored in browser storage.";
+  }
+
+  if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = false;
+  if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = !status.directoryName;
+}
+
+async function handleSelectDataFolder() {
+  try {
+    await pickStorageDirectory();
+    const directoryData = await loadStoredDataFromDirectory();
+    if (directoryData) {
+      applyStoredData(directoryData);
+    } else {
+      await persistStoredData(getPersistableData());
+    }
+    await refreshStorageStatusUI();
+  } catch (error) {
+    if ((error as { name?: string }).name === "AbortError") {
+      return;
+    }
+    window.alert("Unable to access the selected folder.");
+  }
+}
+
+async function handleClearDataFolder() {
+  try {
+    await clearStorageDirectory();
+    await persistStoredData(getPersistableData());
+    await refreshStorageStatusUI();
+  } catch (error) {
+    window.alert("Unable to switch storage back to browser mode.");
+  }
+}
+
 // Tab navigation
 // Connection handling
 
@@ -131,7 +223,7 @@ function getTargetBufferLength() {
 }
 
 // Initialize
-export function initApp() {
+export async function initApp() {
   if (!document.querySelector(".theme-fade")) {
     const fade = document.createElement("div");
     fade.className = "theme-fade";
@@ -168,7 +260,7 @@ export function initApp() {
     shallowEqualArray
   );
 
-  loadData();
+  await loadData();
   themeView?.initTheme();
   themeView?.initContrast();
   sidebarView?.initSidebarCollapse();
@@ -193,6 +285,16 @@ export function initApp() {
     onThemeChange: () => themeView?.applyTheme(),
     onContrastChange: () => themeView?.applyContrast()
   });
+  if (elements.selectDataFolderBtn) {
+    elements.selectDataFolderBtn.addEventListener("click", () => {
+      void handleSelectDataFolder();
+    });
+  }
+  if (elements.clearDataFolderBtn) {
+    elements.clearDataFolderBtn.addEventListener("click", () => {
+      void handleClearDataFolder();
+    });
+  }
 
   // Theme toggle
   elements.themeToggle.addEventListener("click", () => themeView?.toggleTheme());
@@ -287,4 +389,5 @@ export function initApp() {
     .forEach((node) => updateRangeFill(node as HTMLInputElement));
   state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   visualizationViewModel?.init();
+  void refreshStorageStatusUI();
 }

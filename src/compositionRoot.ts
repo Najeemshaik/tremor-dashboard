@@ -4,6 +4,7 @@ import { BLE_CONFIG } from "./services/bluetooth/bleConfig.js";
 import { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
+import { persistStoredData } from "./services/storage/storageService.js";
 import { DatabaseService } from "./services/database/database.js";
 import { createProfileRepository } from "./services/database/repositories/profileRepository.js";
 import { createSequenceRepository } from "./services/database/repositories/sequenceRepository.js";
@@ -126,7 +127,7 @@ export async function createAppDependencies(): Promise<AppDependencies> {
   });
 
   const persist = () => {
-    sqliteStorage.persistStoredData({
+    void persistStoredData({
       profiles: state.profiles,
       sequences: state.sequences,
       sessions: state.sessions
