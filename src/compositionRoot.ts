@@ -5,6 +5,7 @@ import { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
 import { persistStoredData } from "./services/storage/storageService.js";
+import { createPersistenceQueue } from "./services/storage/persistenceQueue.js";
 import { DatabaseService } from "./services/database/database.js";
 import { createProfileRepository } from "./services/database/repositories/profileRepository.js";
 import { createSequenceRepository } from "./services/database/repositories/sequenceRepository.js";
@@ -33,17 +34,23 @@ export async function createAppDependencies(): Promise<AppDependencies> {
   const store = createStore(createInitialState());
   const state = store.getState();
   const elements = bindElements();
-  const database = new DatabaseService();
-  await database.init();
-  const profileRepository = createProfileRepository(database.getDb());
-  const sequenceRepository = createSequenceRepository(database.getDb());
-  const sessionRepository = createSessionRepository(database.getDb());
-  const sqliteStorage = new SqliteStorageService({
-    database,
-    profileRepository,
-    sequenceRepository,
-    sessionRepository
-  });
+  let sqliteStorage: SqliteStorageService | null = null;
+
+  try {
+    const database = new DatabaseService();
+    await database.init();
+    const profileRepository = createProfileRepository(database.getDb());
+    const sequenceRepository = createSequenceRepository(database.getDb());
+    const sessionRepository = createSessionRepository(database.getDb());
+    sqliteStorage = new SqliteStorageService({
+      database,
+      profileRepository,
+      sequenceRepository,
+      sessionRepository
+    });
+  } catch (error) {
+    console.warn("SQLite initialization failed. Falling back to browser storage.", error);
+  }
 
   let connectionView: ConnectionView;
   let visualizationView: VisualizationView;
@@ -126,13 +133,28 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     connectionView
   });
 
+  const persistenceQueue = createPersistenceQueue({
+    persist: persistStoredData,
+    debounceMs: 350
+  });
+
   const persist = () => {
-    void persistStoredData({
+    persistenceQueue.schedule({
       profiles: state.profiles,
       sequences: state.sequences,
       sessions: state.sessions
     });
   };
+
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      void persistenceQueue.flush();
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    void persistenceQueue.flush();
+  });
 
   const updateParamUIFn = () => updateParamUI(state, elements);
   const updateLastSentUIFn = () => updateLastSentUI(state, elements);

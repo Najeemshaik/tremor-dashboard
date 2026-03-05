@@ -2,12 +2,14 @@
 
 import { seedProfiles, seedSequences, seedSessions } from "./state/seedData.js";
 import {
-  clearStorageDirectory,
-  getStorageStatus,
+  clearSupabaseStorageConfig,
+  clearSupabaseConfigFile,
+  getSupabaseStorageStatus,
   loadStoredData,
-  loadStoredDataFromDirectory,
+  loadSupabaseConfigFromFilePicker,
   persistStoredData,
-  pickStorageDirectory,
+  saveSupabaseStorageConfig,
+  tryLoadSupabaseConfigFromStoredFile,
   type StoredPayload
 } from "./services/storage/storageService.js";
 import { SqliteStorageService } from "./services/database/sqliteStorageService.js";
@@ -61,7 +63,7 @@ let sequencesViewModel!: SequencesViewModel;
 let mockTelemetry!: MockTelemetryService;
 let bluetoothService!: BluetoothService;
 let mockConnection!: MockConnectionService;
-let sqliteStorage!: SqliteStorageService;
+let sqliteStorage: SqliteStorageService | null = null;
 
 export type AppDependencies = {
   store: Store<AppState>;
@@ -84,7 +86,7 @@ export type AppDependencies = {
   sessionsViewModel: SessionsViewModel;
   profilesViewModel: ProfilesViewModel;
   sequencesViewModel: SequencesViewModel;
-  sqliteStorage: SqliteStorageService;
+  sqliteStorage: SqliteStorageService | null;
 };
 
 export function configureApp(deps: AppDependencies) {
@@ -109,7 +111,7 @@ export function configureApp(deps: AppDependencies) {
   sessionsViewModel = deps.sessionsViewModel;
   profilesViewModel = deps.profilesViewModel;
   sequencesViewModel = deps.sequencesViewModel;
-  sqliteStorage = deps.sqliteStorage;
+  sqliteStorage = deps.sqliteStorage ?? null;
 }
 
 // Data persistence
@@ -141,77 +143,48 @@ function applyStoredData(parsed: StoredPayload | null) {
 async function loadData() {
   try {
     const parsed = await loadStoredData();
-    if (parsed) {
-      applyStoredData(parsed);
-      return;
-    }
+    applyStoredData(parsed);
   } catch (error) {
-    // Continue with sqlite fallback.
+    applyStoredData(null);
   }
-
-  const sqliteParsed = sqliteStorage.loadStoredData();
-  applyStoredData(sqliteParsed);
 }
 
-async function refreshStorageStatusUI() {
-  if (!elements.dataFolderStatus) return;
-  let status;
-  try {
-    status = await getStorageStatus();
-  } catch (error) {
-    elements.dataFolderStatus.textContent = "Unable to read storage status. Data is stored in browser storage.";
-    if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = true;
-    if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = true;
-    return;
-  }
-  if (!status.supportsDirectoryPicker) {
-    elements.dataFolderStatus.textContent =
-      "Folder picker is unavailable in this browser/context. Data is stored in browser storage.";
-    if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = true;
-    if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = true;
+async function refreshSupabaseStatusUI() {
+  const statusEl = elements.supabaseStatus;
+  if (!statusEl) return;
+
+  const status = await getSupabaseStorageStatus();
+  if (!status.configured) {
+    statusEl.textContent = "Supabase is not configured. Load a config file to connect.";
+    if (elements.supabaseClearConfigBtn) elements.supabaseClearConfigBtn.disabled = true;
     return;
   }
 
-  if (status.usingDirectory) {
-    const directoryName = status.directoryName ?? "selected folder";
-    elements.dataFolderStatus.textContent = `Saving data to folder: ${directoryName}`;
-  } else if (status.directoryName) {
-    elements.dataFolderStatus.textContent =
-      `Folder linked (${status.directoryName}) but permission is not currently granted. Choose Folder again to re-authorize.`;
-  } else {
-    elements.dataFolderStatus.textContent = "No folder selected. Data is stored in browser storage.";
-  }
-
-  if (elements.selectDataFolderBtn) elements.selectDataFolderBtn.disabled = false;
-  if (elements.clearDataFolderBtn) elements.clearDataFolderBtn.disabled = !status.directoryName;
+  statusEl.textContent = status.message;
+  if (elements.supabaseClearConfigBtn) elements.supabaseClearConfigBtn.disabled = false;
 }
 
-async function handleSelectDataFolder() {
+async function handleSupabaseLoadConfig() {
   try {
-    await pickStorageDirectory();
-    const directoryData = await loadStoredDataFromDirectory();
-    if (directoryData) {
-      applyStoredData(directoryData);
+    const config = await loadSupabaseConfigFromFilePicker();
+    saveSupabaseStorageConfig(config);
+    const loaded = await loadStoredData();
+    if (loaded) {
+      applyStoredData(loaded);
     } else {
       await persistStoredData(getPersistableData());
     }
-    await refreshStorageStatusUI();
+    await refreshSupabaseStatusUI();
+    store.notify();
   } catch (error) {
-    if ((error as { name?: string }).name === "AbortError") {
-      return;
-    }
-    window.alert("Unable to access the selected folder.");
+    window.alert((error as Error).message || "Unable to load Supabase config file.");
   }
 }
 
-async function handleClearDataFolder() {
-  try {
-    await clearStorageDirectory();
-    await persistStoredData(getPersistableData());
-    await refreshStorageStatusUI();
-  } catch (error) {
-    window.alert("Unable to switch storage back to browser mode.");
-  }
+async function handleSupabaseClear() {
+  clearSupabaseStorageConfig();
+  await clearSupabaseConfigFile();
+  await refreshSupabaseStatusUI();
 }
 
 // Tab navigation
@@ -260,7 +233,35 @@ export async function initApp() {
     shallowEqualArray
   );
 
-  await loadData();
+  // Bootstrap Supabase config before loading data
+  const storedConfig = await tryLoadSupabaseConfigFromStoredFile();
+  if (storedConfig) {
+    saveSupabaseStorageConfig(storedConfig);
+    document.getElementById("configOverlay")?.classList.add("hidden");
+    await loadData();
+  } else {
+    // No stored config — show blocking overlay and wait for user to select a file
+    await new Promise<void>((resolve) => {
+      const overlay = document.getElementById("configOverlay");
+      const btn = document.getElementById("configOverlayBtn");
+      const errorEl = document.getElementById("configOverlayError");
+
+      btn?.addEventListener("click", () => {
+        void (async () => {
+          if (errorEl) errorEl.textContent = "";
+          try {
+            const config = await loadSupabaseConfigFromFilePicker();
+            saveSupabaseStorageConfig(config);
+            if (overlay) overlay.classList.add("hidden");
+            await loadData();
+            resolve();
+          } catch (err) {
+            if (errorEl) errorEl.textContent = (err as Error).message || "Could not load config file. Please try again.";
+          }
+        })();
+      });
+    });
+  }
   themeView?.initTheme();
   themeView?.initContrast();
   sidebarView?.initSidebarCollapse();
@@ -285,14 +286,14 @@ export async function initApp() {
     onThemeChange: () => themeView?.applyTheme(),
     onContrastChange: () => themeView?.applyContrast()
   });
-  if (elements.selectDataFolderBtn) {
-    elements.selectDataFolderBtn.addEventListener("click", () => {
-      void handleSelectDataFolder();
+  if (elements.supabaseLoadConfigBtn) {
+    elements.supabaseLoadConfigBtn.addEventListener("click", () => {
+      void handleSupabaseLoadConfig();
     });
   }
-  if (elements.clearDataFolderBtn) {
-    elements.clearDataFolderBtn.addEventListener("click", () => {
-      void handleClearDataFolder();
+  if (elements.supabaseClearConfigBtn) {
+    elements.supabaseClearConfigBtn.addEventListener("click", () => {
+      void handleSupabaseClear();
     });
   }
 
@@ -389,5 +390,5 @@ export async function initApp() {
     .forEach((node) => updateRangeFill(node as HTMLInputElement));
   state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   visualizationViewModel?.init();
-  void refreshStorageStatusUI();
+  void refreshSupabaseStatusUI();
 }

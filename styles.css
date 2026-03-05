@@ -2310,6 +2310,25 @@ input[type="range"]:focus::-webkit-slider-thumb {
   white-space: nowrap;
 }
 
+.setting-item-stack {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.setting-main {
+  width: 100%;
+}
+
+.setting-form {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.setting-form input {
+  width: 100%;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    MODALS
    ───────────────────────────────────────────────────────────────────────────── */
@@ -2729,4 +2748,92 @@ a:focus-visible {
     --border-medium: rgba(255, 255, 255, 0.5);
     --border-strong: rgba(255, 255, 255, 0.7);
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STARTUP CONFIG OVERLAY
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.config-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  z-index: 9999;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.config-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.config-overlay-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8, 2.5rem);
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.config-overlay-logo {
+  width: 56px;
+  height: 56px;
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-2);
+}
+
+.config-overlay-logo svg {
+  width: 32px;
+  height: 32px;
+  stroke: #fff;
+}
+
+.config-overlay-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.config-overlay-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.config-overlay-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.config-overlay-btn {
+  margin-top: var(--space-2);
+  min-width: 180px;
+}
+
+.config-overlay-error {
+  font-size: 0.8125rem;
+  color: var(--danger, #ef4444);
+  min-height: 1.2em;
+  margin: 0;
 }

@@ -855,16 +855,16 @@
             </div>
             <div class="setting-item">
               <div>
-                <h3 id="settingDataFolderLabel">Data Folder</h3>
-                <p class="muted" id="settingDataFolderHelp">Choose where profiles, sequences, and sessions are stored.</p>
-                <p class="muted setting-status" id="dataFolderStatus" aria-live="polite">No folder selected. Data is stored in browser storage.</p>
+                <h3 id="settingSupabaseLabel">Supabase Storage</h3>
+                <p class="muted" id="settingSupabaseHelp">Select a JSON config file containing your Supabase credentials. The file will be remembered for future sessions.</p>
+                <p class="muted setting-status" id="supabaseStatus" aria-live="polite">Supabase is not configured.</p>
               </div>
               <div class="setting-actions">
-                <button type="button" class="btn btn-secondary" id="selectDataFolderBtn" aria-labelledby="settingDataFolderLabel settingDataFolderHelp">
-                  Choose Folder
+                <button type="button" class="btn btn-secondary" id="supabaseLoadConfigBtn" aria-labelledby="settingSupabaseLabel settingSupabaseHelp">
+                  Load Config File
                 </button>
-                <button type="button" class="btn btn-ghost" id="clearDataFolderBtn" aria-labelledby="settingDataFolderLabel settingDataFolderHelp">
-                  Use Browser Storage
+                <button type="button" class="btn btn-ghost" id="supabaseClearConfigBtn" aria-labelledby="settingSupabaseLabel settingSupabaseHelp">
+                  Clear Config
                 </button>
               </div>
             </div>
@@ -872,6 +872,24 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Startup Config Overlay -->
+  <div id="configOverlay" class="config-overlay" role="dialog" aria-modal="true" aria-labelledby="configOverlayTitle">
+    <div class="config-overlay-card">
+      <div class="config-overlay-logo">
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+      <h1 id="configOverlayTitle" class="config-overlay-title">Tremor Monitor Pro</h1>
+      <p class="config-overlay-subtitle">Select your Supabase config file to continue</p>
+      <p class="config-overlay-hint">The file should be a JSON file containing your <code>url</code>, <code>anonKey</code>, and optionally <code>table</code>.</p>
+      <button type="button" class="btn btn-primary config-overlay-btn" id="configOverlayBtn">
+        Select Config File
+      </button>
+      <p class="config-overlay-error" id="configOverlayError" aria-live="polite"></p>
+    </div>
   </div>
 
   <!-- Profile Save Modal -->
@@ -955,7 +973,7 @@
   <script type="importmap">
     {
       "imports": {
-        "sql.js": "./node_modules/sql.js/dist/sql-wasm-debug.mjs"
+        "sql.js": "./dist/src/services/database/sqlJsModule.js"
       }
     }
   </script>

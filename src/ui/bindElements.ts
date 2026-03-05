@@ -113,8 +113,8 @@ export function bindElements(): Elements {
 
     settingDarkMode: $("#settingDarkMode") as HTMLInputElement | null,
     settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null,
-    selectDataFolderBtn: $("#selectDataFolderBtn") as HTMLButtonElement | null,
-    clearDataFolderBtn: $("#clearDataFolderBtn") as HTMLButtonElement | null,
-    dataFolderStatus: $("#dataFolderStatus")
+    supabaseLoadConfigBtn: $("#supabaseLoadConfigBtn") as HTMLButtonElement | null,
+    supabaseClearConfigBtn: $("#supabaseClearConfigBtn") as HTMLButtonElement | null,
+    supabaseStatus: $("#supabaseStatus")
   };
 }
