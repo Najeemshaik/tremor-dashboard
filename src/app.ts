@@ -187,9 +187,6 @@ async function handleSupabaseClear() {
   await refreshSupabaseStatusUI();
 }
 
-// Tab navigation
-// Connection handling
-
 function getTargetBufferLength() {
   const length = Math.round(state.visualization.sampleRate * state.visualization.windowSeconds);
   return Math.max(60, length);

@@ -1,4 +1,5 @@
 import { createId } from "../core/id.js";
+import { nowTimestamp } from "../core/format.js";
 import type { AppState, Profile } from "../state/types.js";
 import type { Store } from "../state/store.js";
 import { exportProfilesJSON } from "../services/export/exportService.js";
@@ -40,7 +41,7 @@ export class ProfilesViewModel {
   }
 
   handleSubmitCreate(name: string) {
-    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const now = nowTimestamp();
     const profile: Profile = {
       id: createId("profile"),
       name,
@@ -80,7 +81,7 @@ export class ProfilesViewModel {
       const newName = window.prompt("Enter new profile name:", profile.name);
       if (newName && newName.trim()) {
         profile.name = newName.trim();
-        profile.updated = new Date().toISOString().slice(0, 19).replace("T", " ");
+        profile.updated = nowTimestamp();
       }
     }
     if (action === "duplicate") {
@@ -88,7 +89,7 @@ export class ProfilesViewModel {
         ...profile,
         id: createId("profile"),
         name: `${profile.name} (Copy)`,
-        updated: new Date().toISOString().slice(0, 19).replace("T", " ")
+        updated: nowTimestamp()
       };
       this.store.update((state) => {
         state.profiles.unshift(copy);
@@ -127,7 +128,7 @@ export class ProfilesViewModel {
         return;
       }
 
-      const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+      const now = nowTimestamp();
       const imported = incoming
         .map((item) => this.normalizeProfile(item, now))
         .filter((profile): profile is Profile => profile !== null);

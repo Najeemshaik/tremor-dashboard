@@ -1,4 +1,5 @@
 import { createId } from "../core/id.js";
+import { nowTimestamp } from "../core/format.js";
 import { calculateSummary } from "../core/math.js";
 import { exportSessionCSV, exportSessionJSON } from "../services/export/exportService.js";
 import type { AppState, Session } from "../state/types.js";
@@ -52,10 +53,7 @@ export class SessionsViewModel {
   }
 
   handleDeleteConfirm(id: string) {
-    this.store.update((state) => {
-      state.sessions = state.sessions.filter((session) => session.id !== id);
-    });
-    this.persist();
+    this.handleDelete(id);
     this.sessionsView.closeSessionModal();
   }
 
@@ -100,13 +98,13 @@ export class SessionsViewModel {
     this.elements.sessionsLogBtn.innerHTML = sessionsButtonHTML;
 
     if (enabled) {
-      const start = new Date();
+      const startTime = Date.now();
       this.store.update((state) => {
         state.activeSession = {
           id: createId("session"),
-          name: `Session ${start.toISOString().slice(0, 19).replace("T", " ")}`,
-          start: start.toISOString().slice(0, 19).replace("T", " "),
-          startTime: start.getTime(),
+          name: `Session ${nowTimestamp()}`,
+          start: nowTimestamp(),
+          startTime,
           durationSec: 0,
           sampleCount: 0,
           samples: [],

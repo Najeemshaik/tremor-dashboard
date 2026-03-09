@@ -1,4 +1,5 @@
 import { getLatencyWarning, type BluetoothService } from "../services/bluetooth/bluetoothService.js";
+import { formatNumber } from "../core/format.js";
 import type { AppState } from "../state/types.js";
 import type { Elements } from "../ui/elements.js";
 
@@ -41,10 +42,10 @@ export class ConnectionView {
 
     const latency = this.state.connection.latency;
     const per = this.state.connection.per;
-    this.elements.latencyValue.textContent = this.formatNumber(latency, 0);
-    this.elements.perValue.textContent = this.formatNumber(per, 2);
-    this.elements.topLatency.textContent = this.formatNumber(latency, 0);
-    this.elements.topPer.textContent = this.formatNumber(per, 2);
+    this.elements.latencyValue.textContent = formatNumber(latency, 0);
+    this.elements.perValue.textContent = formatNumber(per, 2);
+    this.elements.topLatency.textContent = formatNumber(latency, 0);
+    this.elements.topPer.textContent = formatNumber(per, 2);
 
     if (this.elements.healthMode) {
       if (this.state.connection.mode === "mock") {
@@ -126,13 +127,6 @@ export class ConnectionView {
       .forEach((button: HTMLButtonElement) => {
         button.disabled = disabled;
       });
-  }
-
-  private formatNumber(value: number | null | undefined, decimals = 1) {
-    if (value === null || value === undefined || Number.isNaN(value)) {
-      return "--";
-    }
-    return Number(value).toFixed(decimals);
   }
 
   private capitalize(value: string) {

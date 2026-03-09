@@ -1,4 +1,5 @@
 import { createId } from "../core/id.js";
+import { nowTimestamp } from "../core/format.js";
 import type { AppState, Sequence, SequenceStep } from "../state/types.js";
 import type { Store } from "../state/store.js";
 import type { BluetoothServicePort } from "../services/types.js";
@@ -243,12 +244,17 @@ export class SequencesViewModel {
     this.updateParamUI();
   }
 
+  private requiresBluetoothConnected(action: string): boolean {
+    if (this.state.connection.mode !== "bluetooth" || this.state.connection.status !== "connected") {
+      window.alert(`Connect to a Bluetooth device before ${action}.`);
+      return false;
+    }
+    return true;
+  }
+
   private async syncSequenceToDevice(sequence: Sequence) {
     if (!sequence) return;
-    if (this.state.connection.mode !== "bluetooth" || this.state.connection.status !== "connected") {
-      window.alert("Connect to a Bluetooth device before syncing sequences.");
-      return;
-    }
+    if (!this.requiresBluetoothConnected("syncing sequences")) return;
     await this.bluetoothService.sendCommand({
       type: "sequence-save",
       sequence: {
@@ -257,28 +263,21 @@ export class SequencesViewModel {
         steps: sequence.steps
       }
     });
-    const now = new Date();
     this.store.update((state) => {
       state.sequenceSync[sequence.id] = {
-        syncedAt: now.toISOString().slice(0, 19).replace("T", " ")
+        syncedAt: nowTimestamp()
       };
     });
   }
 
   private async playSequenceOnDevice(sequence: Sequence) {
     if (!sequence) return;
-    if (this.state.connection.mode !== "bluetooth" || this.state.connection.status !== "connected") {
-      window.alert("Connect to a Bluetooth device before playing sequences.");
-      return;
-    }
+    if (!this.requiresBluetoothConnected("playing sequences")) return;
     await this.bluetoothService.sendCommand({ type: "sequence-play", id: sequence.id });
   }
 
   private async stopSequenceOnDevice() {
-    if (this.state.connection.mode !== "bluetooth" || this.state.connection.status !== "connected") {
-      window.alert("Connect to a Bluetooth device before stopping sequences.");
-      return;
-    }
+    if (!this.requiresBluetoothConnected("stopping sequences")) return;
     await this.bluetoothService.sendCommand({ type: "sequence-stop" });
   }
 }

@@ -1,4 +1,5 @@
 import { calculateSummary, calculateWindowedRMS } from "../../core/math.js";
+import { formatNumber } from "../../core/format.js";
 import type { AppState } from "../../state/types.js";
 import type { Elements } from "../../ui/elements.js";
 
@@ -34,16 +35,16 @@ export class MetricsView {
 
   updateClinicalMetricsUI() {
     const m = this.state.clinicalMetrics;
-    this.elements.metricFrequency.textContent = this.formatNumber(m.frequency, 2);
-    this.elements.metricRMS.textContent = this.formatNumber(m.rms, 1);
-    this.elements.metricPower.textContent = this.formatNumber(m.power, 1);
-    this.elements.metricRegularity.textContent = this.formatNumber(m.regularity, 0);
+    this.elements.metricFrequency.textContent = formatNumber(m.frequency, 2);
+    this.elements.metricRMS.textContent = formatNumber(m.rms, 1);
+    this.elements.metricPower.textContent = formatNumber(m.power, 1);
+    this.elements.metricRegularity.textContent = formatNumber(m.regularity, 0);
     this.elements.metricUPDRS.textContent = String(m.updrs);
-    this.elements.metricSNR.textContent = this.formatNumber(m.snr, 1);
-    this.elements.metricPeakToPeak.textContent = this.formatNumber(m.peakToPeak, 1);
-    this.elements.metricBandwidth.textContent = this.formatNumber(m.bandwidth, 2);
-    this.elements.metricStability.textContent = this.formatNumber(m.stability, 0);
-    this.elements.metricHarmonic.textContent = this.formatNumber(m.harmonic, 0);
+    this.elements.metricSNR.textContent = formatNumber(m.snr, 1);
+    this.elements.metricPeakToPeak.textContent = formatNumber(m.peakToPeak, 1);
+    this.elements.metricBandwidth.textContent = formatNumber(m.bandwidth, 2);
+    this.elements.metricStability.textContent = formatNumber(m.stability, 0);
+    this.elements.metricHarmonic.textContent = formatNumber(m.harmonic, 0);
 
     this.updateIndicator(this.elements.freqIndicator, m.frequency, 4, 6, 3, 8);
     this.updateIndicator(this.elements.rmsIndicator, m.rms, 0, 30, 0, 100);
@@ -78,10 +79,4 @@ export class MetricsView {
     }
   }
 
-  private formatNumber(value: number | null | undefined, decimals = 1) {
-    if (value === null || value === undefined || Number.isNaN(value)) {
-      return "--";
-    }
-    return Number(value).toFixed(decimals);
-  }
 }

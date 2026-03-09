@@ -1,3 +1,7 @@
+export function nowTimestamp() {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
+
 export function formatNumber(value: number | null | undefined, decimals = 1) {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return "--";
