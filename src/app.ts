@@ -125,11 +125,10 @@ function getPersistableData(): StoredPayload {
 
 function applyStoredData(parsed: StoredPayload | null) {
   if (parsed) {
-    const stored = parsed as any;
     store.update((state) => {
-      state.profiles = stored.profiles || seedProfiles;
-      state.sequences = stored.sequences || seedSequences;
-      state.sessions = stored.sessions || seedSessions;
+      state.profiles = parsed.profiles || seedProfiles;
+      state.sequences = parsed.sequences || seedSequences;
+      state.sessions = parsed.sessions || seedSessions;
     });
     return;
   }
@@ -145,6 +144,7 @@ async function loadData() {
     const parsed = await loadStoredData();
     applyStoredData(parsed);
   } catch (error) {
+    console.error("Failed to load stored data:", error);
     applyStoredData(null);
   }
 }
@@ -243,11 +243,12 @@ export async function initApp() {
     // No stored config — show blocking overlay and wait for user to select a file
     await new Promise<void>((resolve) => {
       const overlay = document.getElementById("configOverlay");
-      const btn = document.getElementById("configOverlayBtn");
+      const btn = document.getElementById("configOverlayBtn") as HTMLButtonElement | null;
       const errorEl = document.getElementById("configOverlayError");
 
       btn?.addEventListener("click", () => {
         void (async () => {
+          if (btn) btn.disabled = true;
           if (errorEl) errorEl.textContent = "";
           try {
             const config = await loadSupabaseConfigFromFilePicker();
@@ -257,6 +258,8 @@ export async function initApp() {
             resolve();
           } catch (err) {
             if (errorEl) errorEl.textContent = (err as Error).message || "Could not load config file. Please try again.";
+          } finally {
+            if (btn) btn.disabled = false;
           }
         })();
       });
@@ -319,7 +322,9 @@ export async function initApp() {
   elements.stopBtn.addEventListener("click", () => paramsViewModel?.handleStop());
 
   elements.freezeBtn.addEventListener("click", () => {
-    state.visualization.freeze = !state.visualization.freeze;
+    store.update((state) => {
+      state.visualization.freeze = !state.visualization.freeze;
+    });
     const icon = state.visualization.freeze
       ? '<polygon points="5 3 19 12 5 21 5 3"/>'
       : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
@@ -332,16 +337,20 @@ export async function initApp() {
   });
 
   elements.clearBtn.addEventListener("click", () => {
-    state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
+    store.update((state) => {
+      state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
+    });
   });
 
   if (elements.snapshotBtn) {
     elements.snapshotBtn.addEventListener("click", () => {
-      if (state.visualization.snapshot) {
-        state.visualization.snapshot = null;
-      } else {
-        state.visualization.snapshot = state.visualization.buffer.slice();
-      }
+      store.update((state) => {
+        if (state.visualization.snapshot) {
+          state.visualization.snapshot = null;
+        } else {
+          state.visualization.snapshot = state.visualization.buffer.slice();
+        }
+      });
       visualizationViewModel?.updateChartControls();
     });
   }
@@ -349,11 +358,11 @@ export async function initApp() {
   if (elements.windowRange) {
     elements.windowRange.addEventListener("input", (event) => {
       const target = event.target as HTMLInputElement;
-      state.visualization.windowSeconds = Number(target.value);
-      const targetLength = getTargetBufferLength();
-      while (state.visualization.buffer.length > targetLength) {
-        state.visualization.buffer.shift();
-      }
+      store.update((state) => {
+        state.visualization.windowSeconds = Number(target.value);
+        const targetLength = getTargetBufferLength();
+        state.visualization.buffer = state.visualization.buffer.slice(-targetLength);
+      });
       visualizationViewModel?.updateChartControls();
       updateRangeFill(target);
     });
@@ -362,7 +371,9 @@ export async function initApp() {
   if (elements.gainRange) {
     elements.gainRange.addEventListener("input", (event) => {
       const target = event.target as HTMLInputElement;
-      state.visualization.gain = Number(target.value);
+      store.update((state) => {
+        state.visualization.gain = Number(target.value);
+      });
       visualizationViewModel?.updateChartControls();
       updateRangeFill(target);
     });
@@ -370,7 +381,9 @@ export async function initApp() {
 
   if (elements.spectrumFreezeBtn) {
     elements.spectrumFreezeBtn.addEventListener("click", () => {
-      state.visualization.freezeSpectrum = !state.visualization.freezeSpectrum;
+      store.update((state) => {
+        state.visualization.freezeSpectrum = !state.visualization.freezeSpectrum;
+      });
       const label = state.visualization.freezeSpectrum ? "Resume Spectrum" : "Freeze Spectrum";
       elements.spectrumFreezeBtn.textContent = label;
       elements.spectrumFreezeBtn.setAttribute(

@@ -82,12 +82,15 @@ export class BluetoothService {
     this.resetLatencyTestState();
   }
 
-  private clearBluetoothState() {
+  private async clearBluetoothState() {
     if (this.state.connection.telemetryChar) {
-      (this.state.connection.telemetryChar as BluetoothRemoteGATTCharacteristic).removeEventListener(
-        "characteristicvaluechanged",
-        this.handleBluetoothTelemetry
-      );
+      const char = this.state.connection.telemetryChar as BluetoothRemoteGATTCharacteristic;
+      try {
+        await char.stopNotifications();
+      } catch {
+        // ignore — server may already be disconnected
+      }
+      char.removeEventListener("characteristicvaluechanged", this.handleBluetoothTelemetry);
     }
     this.state.connection.device = null;
     this.state.connection.server = null;
@@ -98,9 +101,9 @@ export class BluetoothService {
     this.state.connection.latencyTest.pendingSeq = null;
   }
 
-  private handleBluetoothDisconnect = () => {
+  private handleBluetoothDisconnect = async () => {
     this.stopLatencyTest();
-    this.clearBluetoothState();
+    await this.clearBluetoothState();
     this.state.connection.status = "disconnected";
     this.resetConnectionMetrics();
     this.onUpdateUI();
