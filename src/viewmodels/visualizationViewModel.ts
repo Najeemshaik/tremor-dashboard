@@ -1,4 +1,4 @@
-import type { AppState } from "../state/types.js";
+import type { AppState, ImuSample, ImuAxis } from "../state/types.js";
 import type { Store } from "../state/store.js";
 import type { BluetoothServicePort, MockTelemetryPort } from "../services/types.js";
 import type { VisualizationViewPort } from "./ports.js";
@@ -29,7 +29,41 @@ export class VisualizationViewModel {
     const state = this.store.getState();
     if (this.bluetoothService.isStreaming()) return null;
     if (state.connection.mode !== "mock" || state.connection.status !== "connected") return null;
-    return this.mockTelemetry.nextSample({ delta, params: state.params });
+    const result = this.mockTelemetry.nextSample({ delta, params: state.params });
+    this.pushImuSample(result.imu);
+    return { sample: result.sample, t: result.t };
+  }
+
+  /**
+   * Called by the serial service (cable mode) for each incoming IMU line.
+   * Routes all 6 axes into their respective buffers and mirrors the
+   * selected axis into `buffer` for the chart renderer.
+   */
+  pushImuSample(imu: ImuSample) {
+    const state = this.store.getState();
+    if (state.visualization.freeze) return;
+
+    const axes: ImuAxis[] = ["ax", "ay", "az", "gx", "gy", "gz"];
+    const targetLength = Math.max(60, Math.round(state.visualization.sampleRate * state.visualization.windowSeconds));
+
+    for (const axis of axes) {
+      state.visualization.axes[axis].push(imu[axis]);
+      while (state.visualization.axes[axis].length > targetLength) {
+        state.visualization.axes[axis].shift();
+      }
+    }
+
+    const selected = state.visualization.selectedAxis;
+    state.visualization.buffer = state.visualization.axes[selected];
+    state.visualization.lastSample = imu[selected];
+    state.visualization.t = imu.t;
+  }
+
+  setSelectedAxis(axis: ImuAxis) {
+    this.store.update((state) => {
+      state.visualization.selectedAxis = axis;
+      state.visualization.buffer = state.visualization.axes[axis];
+    });
   }
 
   updateChartControls() {

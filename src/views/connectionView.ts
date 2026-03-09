@@ -51,7 +51,7 @@ export class ConnectionView {
       if (this.state.connection.mode === "mock") {
         this.elements.healthMode.textContent = "Simulation";
       } else if (this.state.connection.mode === "cable") {
-        this.elements.healthMode.textContent = "USB Cable (Stub)";
+        this.elements.healthMode.textContent = "USB Serial";
       } else {
         this.elements.healthMode.textContent = this.capitalize(this.state.connection.mode);
       }

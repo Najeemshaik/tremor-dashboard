@@ -20,6 +20,7 @@ import { bindParamInputs, bindSettingsEvents } from "./ui/bindEvents.js";
 import type { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import type { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import type { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
+import type { SerialService } from "./services/serial/serialService.js";
 import type { ConnectionView } from "./views/connectionView.js";
 import type { ModalManager } from "./views/modalManager.js";
 import type { TabsView } from "./views/tabsView.js";
@@ -62,6 +63,7 @@ let sequencesViewModel!: SequencesViewModel;
 let mockTelemetry!: MockTelemetryService;
 let bluetoothService!: BluetoothService;
 let mockConnection!: MockConnectionService;
+let serialService!: SerialService;
 let sqliteStorage: SqliteStorageService | null = null;
 
 export type AppDependencies = {
@@ -69,6 +71,7 @@ export type AppDependencies = {
   elements: Elements;
   bluetoothService: BluetoothService;
   mockConnection: MockConnectionService;
+  serialService: SerialService;
   mockTelemetry: MockTelemetryService;
   connectionView: ConnectionView;
   modalManager: ModalManager;
@@ -306,6 +309,22 @@ export async function initApp() {
   elements.sidebarLogBtn.addEventListener("click", () => sessionsViewModel?.toggleLogging());
   elements.sessionsLogBtn.addEventListener("click", () => sessionsViewModel?.toggleLogging());
 
+  if (elements.importSessionBtn) {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".txt,.csv";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        void sessionsViewModel?.handleImportFile(file);
+        fileInput.value = "";
+      }
+    });
+    elements.importSessionBtn.addEventListener("click", () => fileInput.click());
+  }
+
   elements.sendBtn.addEventListener("click", () => paramsViewModel?.handleSend());
   elements.stopBtn.addEventListener("click", () => paramsViewModel?.handleStop());
 
@@ -364,6 +383,13 @@ export async function initApp() {
       });
       visualizationViewModel?.updateChartControls();
       updateRangeFill(target);
+    });
+  }
+
+  if (elements.axisSelect) {
+    elements.axisSelect.addEventListener("change", (event) => {
+      const target = event.target as HTMLSelectElement;
+      visualizationViewModel?.setSelectedAxis(target.value as import("./state/types.js").ImuAxis);
     });
   }
 

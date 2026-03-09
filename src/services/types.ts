@@ -1,4 +1,4 @@
-import type { Sequence } from "../state/types.js";
+import type { Sequence, ImuSample } from "../state/types.js";
 import type { LatencyWarningLevel } from "./bluetooth/bluetoothService.js";
 
 export type BluetoothServicePort = {
@@ -24,6 +24,7 @@ export type MockTelemetryPort = {
   nextSample: (input: { delta: number; params: { freq: number; amp: number; noise: number; enabled: boolean } }) => {
     t: number;
     sample: number;
+    imu: ImuSample;
   };
   reset: () => void;
 };

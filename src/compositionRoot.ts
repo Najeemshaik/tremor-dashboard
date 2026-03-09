@@ -4,6 +4,7 @@ import { BLE_CONFIG } from "./services/bluetooth/bleConfig.js";
 import { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
+import { SerialService } from "./services/serial/serialService.js";
 import { persistStoredData } from "./services/storage/storageService.js";
 import { createPersistenceQueue } from "./services/storage/persistenceQueue.js";
 import { DatabaseService } from "./services/database/database.js";
@@ -82,6 +83,24 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     }
   });
 
+  const serialService = new SerialService({
+    onStatus: (status) => {
+      store.update((s) => {
+        s.connection.status = status;
+        if (status === "disconnected") {
+          bluetoothService.resetConnectionMetrics();
+        }
+      });
+      connectionView?.update();
+    },
+    onSample: (imu) => {
+      visualizationViewModel?.pushImuSample(imu);
+    },
+    onError: (message) => {
+      console.error("Serial error:", message);
+    }
+  });
+
   const mockTelemetry = new MockTelemetryService();
 
   connectionView = new ConnectionView({ elements, state, bluetoothService });
@@ -128,6 +147,7 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     store,
     bluetoothService,
     mockConnection,
+    serialService,
     connectionView
   });
 
@@ -200,6 +220,7 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     elements,
     bluetoothService,
     mockConnection,
+    serialService,
     mockTelemetry,
     connectionView,
     modalManager,

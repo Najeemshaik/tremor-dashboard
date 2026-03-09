@@ -67,8 +67,22 @@ export type ParamsState = {
   enabled: boolean;
 };
 
+export type ImuAxis = "ax" | "ay" | "az" | "gx" | "gy" | "gz";
+
+export type ImuSample = {
+  t: number;
+  ax: number;
+  ay: number;
+  az: number;
+  gx: number;
+  gy: number;
+  gz: number;
+};
+
 export type VisualizationState = {
   buffer: number[];
+  axes: Record<ImuAxis, number[]>;
+  selectedAxis: ImuAxis;
   t: number;
   freeze: boolean;
   lastSample: number;

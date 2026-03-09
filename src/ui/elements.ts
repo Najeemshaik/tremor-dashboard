@@ -59,6 +59,7 @@ export type Elements = {
   gainRange: HTMLInputElement | null;
   gainValue: HTMLElement | null;
   snapshotBtn: HTMLButtonElement | null;
+  axisSelect: HTMLSelectElement | null;
 
   metricFrequency: HTMLElement;
   metricRMS: HTMLElement;
@@ -98,6 +99,7 @@ export type Elements = {
   sequencesEmpty: HTMLElement;
   newSequenceBtn: HTMLButtonElement;
 
+  importSessionBtn: HTMLButtonElement | null;
   sessionsTable: HTMLElement;
   sessionsEmpty: HTMLElement;
   sessionModal: HTMLElement;

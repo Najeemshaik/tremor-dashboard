@@ -152,6 +152,55 @@ export class SessionsViewModel {
     }
   }
 
+  /**
+   * Parse a .txt CSV file (format: timestamp_ms, ax, ay, az, gx, gy, gz)
+   * and import it as a new session using the ay column as the signal.
+   */
+  async handleImportFile(file: File): Promise<void> {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+
+    const samples: number[] = [];
+    let tFirst: number | null = null;
+    let tLast = 0;
+
+    for (const line of lines) {
+      const cols = line.split(",");
+      if (cols.length < 7) continue;
+      const nums = cols.map((c) => parseFloat(c.trim()));
+      if (nums.some((n) => !Number.isFinite(n))) continue;
+      const [t, , ay] = nums;
+      if (tFirst === null) tFirst = t;
+      tLast = t;
+      samples.push(ay);
+    }
+
+    if (samples.length === 0) {
+      window.alert("No valid data found in file. Expected format: timestamp, ax, ay, az, gx, gy, gz");
+      return;
+    }
+
+    const rawDuration = tLast - (tFirst ?? 0);
+    const durationSec = rawDuration > 1000 ? rawDuration / 1000 : rawDuration;
+    const summary = calculateSummary(samples);
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+
+    const session: Session = {
+      id: createId("session"),
+      name: baseName,
+      start: nowTimestamp(),
+      durationSec: Math.max(1, Math.round(durationSec)),
+      sampleCount: samples.length,
+      samples,
+      summary
+    };
+
+    this.store.update((state) => {
+      state.sessions.unshift(session);
+    });
+    this.persist();
+  }
+
   private findSession(id: string): Session | undefined {
     return this.state.sessions.find((session) => session.id === id);
   }

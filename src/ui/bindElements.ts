@@ -63,6 +63,7 @@ export function bindElements(): Elements {
     gainRange: $("#gainRange") as HTMLInputElement | null,
     gainValue: $("#gainValue"),
     snapshotBtn: $("#snapshotBtn") as HTMLButtonElement | null,
+    axisSelect: $("#axisSelect") as HTMLSelectElement | null,
 
     metricFrequency: $("#metricFrequency") as HTMLElement,
     metricRMS: $("#metricRMS") as HTMLElement,
@@ -102,6 +103,7 @@ export function bindElements(): Elements {
     sequencesEmpty: $("#sequencesEmpty") as HTMLElement,
     newSequenceBtn: $("#newSequenceBtn") as HTMLButtonElement,
 
+    importSessionBtn: $("#importSessionBtn") as HTMLButtonElement | null,
     sessionsTable: $("#sessionsTable tbody") as HTMLElement,
     sessionsEmpty: $("#sessionsEmpty") as HTMLElement,
     sessionModal: $("#sessionModal") as HTMLElement,
