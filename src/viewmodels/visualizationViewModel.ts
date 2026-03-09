@@ -28,6 +28,7 @@ export class VisualizationViewModel {
   getSample(delta: number) {
     const state = this.store.getState();
     if (this.bluetoothService.isStreaming()) return null;
+    if (state.connection.mode !== "mock" || state.connection.status !== "connected") return null;
     return this.mockTelemetry.nextSample({ delta, params: state.params });
   }
 

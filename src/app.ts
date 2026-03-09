@@ -1,6 +1,5 @@
 /* global window, document */
 
-import { seedProfiles, seedSequences, seedSessions } from "./state/seedData.js";
 import {
   clearSupabaseStorageConfig,
   clearSupabaseConfigFile,
@@ -124,18 +123,10 @@ function getPersistableData(): StoredPayload {
 }
 
 function applyStoredData(parsed: StoredPayload | null) {
-  if (parsed) {
-    store.update((state) => {
-      state.profiles = parsed.profiles || seedProfiles;
-      state.sequences = parsed.sequences || seedSequences;
-      state.sessions = parsed.sessions || seedSessions;
-    });
-    return;
-  }
   store.update((state) => {
-    state.profiles = seedProfiles;
-    state.sequences = seedSequences;
-    state.sessions = seedSessions;
+    state.profiles = parsed?.profiles ?? [];
+    state.sequences = parsed?.sequences ?? [];
+    state.sessions = parsed?.sessions ?? [];
   });
 }
 

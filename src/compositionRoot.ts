@@ -121,9 +121,7 @@ export async function createAppDependencies(): Promise<AppDependencies> {
   visualizationView = new VisualizationView({
     elements,
     state,
-    getSample: (delta) =>
-      visualizationViewModel?.getSample(delta) ??
-      (bluetoothService.isStreaming() ? null : mockTelemetry.nextSample({ delta, params: state.params }))
+    getSample: (delta) => visualizationViewModel?.getSample(delta) ?? null
   });
 
   const connectionViewModel = new ConnectionViewModel({

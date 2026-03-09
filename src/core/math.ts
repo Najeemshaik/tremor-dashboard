@@ -2,17 +2,6 @@ export function randomBetween(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-export function generateSamples(freq: number, amp: number, noise: number, count: number) {
-  const samples: number[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const t = i / count;
-    const signal = amp * Math.sin(2 * Math.PI * freq * t);
-    const noiseVal = (Math.random() * 2 - 1) * noise * 0.4;
-    samples.push(signal + noiseVal);
-  }
-  return samples;
-}
-
 export function calculateSummary(samples?: number[]) {
   if (!samples || samples.length === 0) {
     return { rms: 0, peak: 0, avg: 0, noise: 0 };
