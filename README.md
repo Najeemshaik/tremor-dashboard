@@ -1,145 +1,179 @@
 # Tremor Dashboard
 
-Clinical-style dashboard for monitoring tremor telemetry, tuning stimulation parameters, and managing profiles, sequences, and recorded sessions. The app is a static TypeScript build that runs fully in the browser with optional Web Bluetooth support and a local, in-browser SQLite database (via `sql.js`).
+> Clinical tremor analysis dashboard for Parkinson's Disease monitoring — built with vanilla TypeScript, Web Bluetooth, and Supabase.
+
+A browser-native application that connects to a wearable BLE sensor, streams accelerometer data in real time, and provides clinical-grade analysis tools for tremor assessment and stimulation parameter control.
+
+---
 
 ## Features
-- Live connection status, latency, and packet error rate (PER) monitoring.
-- Real-time signal visualization with configurable windowing, gain, freeze, and snapshot.
-- Clinical metrics panel derived from incoming telemetry.
-- Parameter control with dirty-state tracking and last-sent status.
-- Profiles for saving and quickly loading parameter presets.
-- Sequences for scripted parameter steps with playback control.
-- Session logging with export options.
-- Light/dark themes and high-contrast mode.
-- Mock connection and telemetry for offline demos.
+
+| | |
+|---|---|
+| **Live Waveform** | Real-time signal chart with configurable window, gain, freeze, and snapshot overlay |
+| **FFT Spectrum** | Frequency-domain view with freezable display |
+| **Clinical Metrics** | Dominant frequency, RMS, UPDRS estimate, SNR, peak-to-peak, and more |
+| **Parameter Control** | Frequency, amplitude, noise tuning with dirty-state tracking and BLE send |
+| **Profiles** | Save, load, import, and export parameter presets |
+| **Sequences** | Scripted multi-step parameter programs with timed playback |
+| **Session Recording** | Log telemetry, view summaries, export as CSV or JSON |
+| **Simulation Mode** | Mock BLE connection and synthetic signal for offline demos |
+| **Supabase Sync** | Optional cloud persistence for profiles, sequences, and sessions |
+| **Theming** | Light/dark mode and high-contrast accessibility mode |
+
+---
 
 ## Tech Stack
-- TypeScript (no bundler; `tsc` builds to `dist/`).
-- Static HTML/CSS UI.
-- `sql.js` (SQLite compiled to WebAssembly) for in-browser persistence.
-- Vitest for unit tests.
+
+| Layer | Technology |
+|---|---|
+| Language | TypeScript 5.4 |
+| Runtime | Browser — ESM modules, no bundler |
+| Bluetooth | Web Bluetooth API |
+| Local DB | `sql.js` (SQLite → WASM) |
+| Remote DB | Supabase REST API |
+| Tests | Vitest |
+| Build | `tsc` → `dist/` |
+
+---
 
 ## Quick Start
-1. Install dependencies.
-   ```sh
-   npm install
-   ```
-2. Build the app.
-   ```sh
-   npm run build
-   ```
-3. Serve the site (recommended so Web Bluetooth works on `localhost`).
-   ```sh
-   python3 -m http.server 5173
-   ```
-4. Open `http://localhost:5173`.
 
-Note: `npm install` copies `sql.js` WASM into `lib/` via `postinstall`. Make sure `lib/sql-wasm.wasm` is served alongside `index.html`.
+```bash
+# 1. Install dependencies (also copies sql-wasm.wasm into lib/)
+npm install
+
+# 2. Compile
+npm run build
+
+# 3. Serve (Bluetooth requires a secure context)
+python3 -m http.server 5173
+# or: npx serve dist/
+```
+
+Open `http://localhost:5173`.
+
+---
 
 ## Scripts
-- `npm run build`: Compile TypeScript into `dist/`.
-- `npm run build:watch`: Rebuild on changes.
-- `npm test`: Run Vitest in CI mode.
-- `npm run test:watch`: Watch tests.
-- `npm run test:vm`: Build and run the viewmodel harness with Node.
 
-## Usage Guide
+```bash
+npm run build          # Compile TypeScript to dist/
+npm run build:watch    # Recompile on changes
+npm test               # Run Vitest (single pass)
+npm run test:watch     # Vitest in watch mode
+npm run test:vm        # Build + run viewmodel harness in Node
+```
 
-### Connection Modes
-- `Mock`: Simulated connect, latency, and PER updates for demos.
-- `Bluetooth`: Web Bluetooth connection to a BLE device.
-- `Cable`: Placeholder mode in state; current UI uses mock or Bluetooth.
+---
 
-### Parameters
-- Adjust frequency, amplitude, noise, and enabled state.
-- Dirty-state indicator shows when local values differ from last sent.
-- Use `Send` to transmit to the device and `Stop` to halt stimulation.
+## Supabase Setup
 
-### Profiles
-- Save the current parameter set as a named profile.
-- Quickly load profiles into the parameter panel.
-- Import/export profiles for sharing.
+Supabase is the primary backend for persisting profiles, sequences, and sessions.
 
-### Sequences
-- Create sequences of timed parameter steps.
-- Play sequences to apply steps over time.
-- Sync sequences to the active device when connected.
+### 1. Create the table
 
-### Sessions
-- Start/stop logging to capture telemetry samples.
-- View session summaries and delete old sessions.
-- Export sessions as CSV or JSON.
+Run in the **Supabase SQL Editor**:
 
-### Visualization
-- Live waveform chart with configurable window length and gain.
-- Spectrum view with freeze and snapshot overlays.
-- Clinical metrics computed from the current buffer.
-
-## Bluetooth Setup
-For full BLE setup, UUID configuration, and troubleshooting, see `BLUETOOTH_SETUP.md`.
-
-## Data Persistence
-- Uses `sql.js` to store profiles, sequences, and sessions in a local SQLite database.
-- The database is serialized into `localStorage` under `tremor-db`.
-- Schema definition lives in `schema.sql`.
-
-## Project Structure
-
-**Architecture Overview**
-- `UI (Views + UI helpers)`: Owns DOM rendering and user interactions. Views are thin and delegate behavior to viewmodels.
-- `ViewModels`: Orchestrate user intent, update state, and call services. They are the main “application layer.”
-- `State + Store`: Central app state with typed models, selectors, and subscriptions.
-- `Services`: Infrastructure and side effects (Bluetooth, database, exports, storage, mock data).
-- `Composition Root`: Wires dependencies and instantiates the app graph.
-- `Entry Points`: Minimal bootstrapping to start the app.
-
-**Key Files**
-- `src/bootstrap.ts`: DOM-ready entry point; creates dependencies and starts the app.
-- `src/app.ts`: App initialization, subscriptions, and event wiring.
-- `src/compositionRoot.ts`: Dependency injection and wiring of services, views, and viewmodels.
-- `styles.css`: Global styles and theming.
-
-**Folder Structure and Responsibilities**
-- `src/core/`: Core utilities and domain logic (constants, math, helpers).
-- `src/state/`: App state types, store implementation, initial state, and seed data.
-- `src/services/`: Infrastructure layer.
-- `src/services/bluetooth/`: BLE config, transport, telemetry parsing, latency/perf monitoring.
-- `src/services/database/`: SQLite schema, migrations, repositories, and persistence.
-- `src/services/export/`: CSV/JSON export utilities for sessions.
-- `src/services/mock/`: Mock connection and telemetry for offline demos/tests.
-- `src/services/storage/`: Local storage helpers for lightweight persistence.
-- `src/ui/`: Element bindings and UI helpers (e.g., param UI updates).
-- `src/views/`: DOM rendering and interaction primitives for each major screen.
-- `src/views/visualization/`: Chart, spectrum, and metrics rendering.
-- `src/viewmodels/`: Business logic for connection, params, profiles, sequences, sessions, and visualization.
-- `src/tests/`: Unit tests plus the viewmodel harness runner.
-- `dist/`: Compiled output from `tsc`.
-- `schema.sql`: SQLite schema reference for the in-browser database.
-
-## Testing
-- Run unit tests with `npm test`.
-- The viewmodel harness runs with `npm run test:vm` after a build.
-
-## Troubleshooting
-- Web Bluetooth requires HTTPS or `http://localhost` in Chrome/Edge.
-- If the UI loads but data does not, confirm your BLE UUIDs match `src/services/bluetooth/bleConfig.ts`.
-- If the database fails to load, clear the `tremor-db` key in `localStorage`.
-
-## Supabase Storage (Optional)
-You can sync `profiles`, `sequences`, and `sessions` to Supabase.
-
-1) Create a table in Supabase SQL editor:
 ```sql
-create table if not exists public.app_state (
-  id text primary key,
-  payload jsonb not null,
-  updated_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.app_state (
+  id         TEXT PRIMARY KEY,
+  payload    JSONB NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
-2) In the app, open **Settings > Supabase Storage** and load your config JSON file.
+### 2. (Optional) Seed initial data
 
-Notes:
-- Supabase is treated as the primary backend when configured.
-- If Supabase is empty on first connect, the app auto-bootstraps it from local data.
-- No auth flow is implemented yet; intended for local/testing usage.
+A ready-to-run seed file is provided at [`supabase/seed.sql`](supabase/seed.sql).
+It inserts the default profiles, sequences, and sessions using an upsert — safe to re-run.
+
+```bash
+# Paste the contents of supabase/seed.sql into the Supabase SQL Editor and run it.
+```
+
+### 3. Load config in the app
+
+Create a `supabase.config.json` file (never commit this):
+
+```json
+{ "url": "https://your-project.supabase.co", "anonKey": "eyJ..." }
+```
+
+In the app: **Settings → Supabase Storage → Load Config File**, then select the file.
+
+> The config is cached in the browser's Origin Private File System (OPFS) so you only need to load it once.
+
+---
+
+## Connection Modes
+
+| Mode | Description |
+|---|---|
+| **Bluetooth** | Web Bluetooth connection to a BLE wearable (requires HTTPS or localhost, Chrome/Edge) |
+| **Mock** | Simulated connection with synthetic sine-wave signal — no hardware needed |
+| **Cable** | Reserved for future wired transport |
+
+The mock signal only runs when explicitly connected in **Mock** mode — it does not auto-play on launch.
+
+---
+
+## Project Structure
+
+```
+src/
+  main.ts              Entry point
+  bootstrap.ts         DOMContentLoaded setup
+  compositionRoot.ts   Wires all services, viewmodels, and views
+  app.ts               Event bindings, subscriptions, config flow
+  state/
+    store.ts           Reactive store (subscribe / update / subscribeSelector)
+    types.ts           All TypeScript state types
+    initialState.ts    Zero-value starting state
+  services/
+    bluetooth/         BLE transport, telemetry parsing, latency test
+    database/          sql.js wrapper, schema, migrations, repositories
+    storage/           Supabase REST client, persistence queue
+    mock/              Simulated BLE connection and telemetry
+    export/            Session CSV/JSON export
+  viewmodels/          Business logic; reads store, dispatches updates
+  views/               DOM rendering; subscribes to store
+  ui/                  Element binding helpers, param UI
+  core/                Shared utilities (math, format, id, constants)
+  tests/               Vitest unit tests
+supabase/
+  seed.sql             Initial data for Supabase (profiles, sequences, sessions)
+dist/                  Compiled output (generated by tsc)
+lib/                   sql-wasm.wasm (copied on npm install)
+```
+
+---
+
+## Architecture
+
+The app follows a **custom MVC pattern with an observer store** — no framework, no dependency injection container.
+
+```
+Views ──subscribe──► Store ◄──update── ViewModels
+                       │
+                  Services (BLE, DB, Storage)
+```
+
+All state mutations go through `store.update()`. Direct property assignment bypasses `notify()` and views will not re-render.
+
+---
+
+## Troubleshooting
+
+**Bluetooth not working**
+- Requires Chrome or Edge on desktop.
+- Must be served over `https://` or `http://localhost`.
+- Confirm your BLE UUIDs match `src/services/bluetooth/bleConfig.ts`.
+
+**Data not loading**
+- Check that your `supabase.config.json` URL and anon key are correct.
+- Confirm the `app_state` table exists in your Supabase project.
+- Clear the `tremor-db` key in `localStorage` if the local SQLite database is corrupt.
+
+**WASM error on load**
+- Ensure `lib/sql-wasm.wasm` is being served. Run `npm install` to regenerate it.
