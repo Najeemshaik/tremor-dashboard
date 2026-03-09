@@ -124,3 +124,22 @@ For full BLE setup, UUID configuration, and troubleshooting, see `BLUETOOTH_SETU
 - Web Bluetooth requires HTTPS or `http://localhost` in Chrome/Edge.
 - If the UI loads but data does not, confirm your BLE UUIDs match `src/services/bluetooth/bleConfig.ts`.
 - If the database fails to load, clear the `tremor-db` key in `localStorage`.
+
+## Supabase Storage (Optional)
+You can sync `profiles`, `sequences`, and `sessions` to Supabase.
+
+1) Create a table in Supabase SQL editor:
+```sql
+create table if not exists public.app_state (
+  id text primary key,
+  payload jsonb not null,
+  updated_at timestamptz not null default now()
+);
+```
+
+2) In the app, open **Settings > Supabase Storage** and load your config JSON file.
+
+Notes:
+- Supabase is treated as the primary backend when configured.
+- If Supabase is empty on first connect, the app auto-bootstraps it from local data.
+- No auth flow is implemented yet; intended for local/testing usage.

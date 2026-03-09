@@ -112,6 +112,9 @@ export function bindElements(): Elements {
     exportJsonBtn: $("#exportJsonBtn") as HTMLButtonElement,
 
     settingDarkMode: $("#settingDarkMode") as HTMLInputElement | null,
-    settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null
+    settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null,
+    supabaseLoadConfigBtn: $("#supabaseLoadConfigBtn") as HTMLButtonElement | null,
+    supabaseClearConfigBtn: $("#supabaseClearConfigBtn") as HTMLButtonElement | null,
+    supabaseStatus: $("#supabaseStatus")
   };
 }

@@ -109,4 +109,7 @@ export type Elements = {
 
   settingDarkMode: HTMLInputElement | null;
   settingHighContrast: HTMLInputElement | null;
+  supabaseLoadConfigBtn: HTMLButtonElement | null;
+  supabaseClearConfigBtn: HTMLButtonElement | null;
+  supabaseStatus: HTMLElement | null;
 };

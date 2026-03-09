@@ -12,6 +12,9 @@ build/
 .env
 .env.*
 
+# Supabase credentials
+supabase.config.json
+
 # Local docs
 referencedocs/
 

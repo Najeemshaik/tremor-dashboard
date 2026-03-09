@@ -77,5 +77,16 @@ export function encodeControlPayload(payload: Record<string, unknown>) {
 }
 
 export function isTelemetryPayload(value: unknown): value is TelemetryPayload {
-  return typeof value === "object" && value !== null;
+  if (typeof value !== "object" || value === null) return false;
+  return (
+    "sample" in value ||
+    "samples" in value ||
+    "seq" in value ||
+    "sequence" in value ||
+    "pong" in value ||
+    "ts" in value ||
+    "latency" in value ||
+    "per" in value ||
+    "type" in value
+  );
 }
