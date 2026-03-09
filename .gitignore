@@ -27,3 +27,5 @@ coverage/
 .cache/
 .parcel-cache/
 .eslintcache
+
+supabase.config.json
