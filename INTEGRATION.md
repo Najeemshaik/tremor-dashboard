@@ -224,6 +224,75 @@ for the clinical metrics to be meaningful.
 
 ---
 
+## Clinical Metrics Reference
+
+These metrics are computed entirely in the dashboard from the incoming signal — the firmware does not need
+to calculate them. They are displayed live and stored with each session.
+
+**File:** `src/views/visualization/metricsView.ts`
+**Math primitives:** `src/core/math.ts`
+
+All metrics update every 500 ms using the current rolling buffer.
+
+---
+
+| Metric | Unit | Label | Formula (source code) | Normal range | Warning → Alert |
+|---|---|---|---|---|---|
+| **Dominant Frequency** | Hz | Frequency | FFT peak bin in 4–12 Hz window (`calculateDominantFrequency`) | 4–6 Hz | outside 4–6 → outside 3–8 |
+| **RMS Amplitude** | RU | RMS | Windowed RMS over last 20 samples (`calculateWindowedRMS`) | 0–30 RU | — → > 100 |
+| **Signal Power** | RU² | Power | `rms²` (mean square) | –20 to 10 | outside → outside –40 to 30 |
+| **Regularity** | % | Regularity | `max(0, 100 − (noise/rms) × 100)` | 60–100% | < 60% → < 0% |
+| **UPDRS Estimate** | /4 | UPDRS | `freq 4–6 Hz → 2`, `freq > 6 Hz → 3`, else `1` | 0–1 | — → > 4 |
+| **SNR** | dB | SNR | `20 × log10(rms / noise)`, capped at 60 dB | 15–40 dB | < 15 → < –10 |
+| **Peak-to-Peak** | RU | Pk–Pk | `peak × 2` where peak = max(abs(samples)) | 0–60 RU | — → > 120 |
+| **Bandwidth** | Hz | Bandwidth | `max(0.2, noise × 2)` | 0–2 Hz | — → > 6 |
+| **Stability** | % | Stability | Same as Regularity: `max(0, 100 − (noise/rms) × 100)` | 70–100% | < 70% → < 0% |
+| **Harmonic Ratio** | % | Harmonic | `dominantFreq × 2` (first harmonic frequency) | 0–60% | — → > 150 |
+
+### Key intermediate values
+
+```
+summary = calculateSummary(buffer)
+  .avg   = mean of all samples
+  .rms   = sqrt(mean(x²))
+  .peak  = max(abs(x))
+  .noise = max(0, rms - abs(avg))   ← proxy for non-stationarity / noise floor
+
+dominantFreq = calculateDominantFrequency(buffer, sampleRate)
+  → 256-sample Hann-windowed DFT, peak magnitude bin in 4–12 Hz
+  → returns 0 if buffer has < 256 samples
+```
+
+### To recalibrate thresholds
+
+All colour-coded indicator thresholds (green / amber / red) are set in `updateClinicalMetricsUI()`:
+
+```ts
+// src/views/visualization/metricsView.ts  — updateClinicalMetricsUI()
+this.updateIndicator(this.elements.freqIndicator,        m.frequency,  4,  6,   3,   8);
+//                                                                      ^normalMin ^normalMax ^alertMin ^alertMax
+this.updateIndicator(this.elements.rmsIndicator,         m.rms,        0, 30,   0, 100);
+this.updateIndicator(this.elements.powerIndicator,       m.power,    -20, 10, -40,  30);
+this.updateIndicator(this.elements.regularityIndicator,  m.regularity, 60,100,   0, 100);
+this.updateIndicator(this.elements.updrsIndicator,       m.updrs,      0,  1,   0,   4);
+this.updateIndicator(this.elements.snrIndicator,         m.snr,       15, 40, -10,  40);
+this.updateIndicator(this.elements.peakToPeakIndicator,  m.peakToPeak, 0, 60,   0, 120);
+this.updateIndicator(this.elements.bandwidthIndicator,   m.bandwidth,  0,  2,   0,   6);
+this.updateIndicator(this.elements.stabilityIndicator,   m.stability, 70,100,   0, 100);
+this.updateIndicator(this.elements.harmonicIndicator,    m.harmonic,   0, 60,   0, 150);
+```
+
+Replace the four numeric arguments per line to match your clinical reference ranges once real hardware
+data is available.
+
+### Units note — "RU" (Raw Units)
+
+The dashboard does not enforce physical units on the incoming signal. RMS, Power, and Peak-to-Peak are
+expressed in whatever units the firmware emits (g, mg, m/s², ADC counts, etc.). Once the firmware is
+finalised, update the unit labels in `index.html` to match (search for `RU`).
+
+---
+
 ## Integration Checklist
 
 - [ ] Set correct BLE UUIDs in `bleConfig.ts`
