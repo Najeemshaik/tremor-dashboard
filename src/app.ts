@@ -142,21 +142,23 @@ function applyStoredData(parsed: StoredPayload | null) {
 
 async function loadData() {
   try {
-    // Try SQLite (local, always available) first
+    // Apply local SQLite data immediately (fast, synchronous)
     const local = sqliteStorage?.loadStoredData() ?? null;
     if (local) {
       applyStoredData(local);
-      // Still sync from Supabase in the background if configured
-      const remote = await loadStoredData();
-      if (remote) applyStoredData(remote);
-      return;
     }
-    // No local data — try Supabase
-    const parsed = await loadStoredData();
-    applyStoredData(parsed);
+    // Always fetch from Supabase if configured — it is the source of truth
+    const remote = await loadStoredData();
+    if (remote) {
+      applyStoredData(remote);
+    } else if (!local) {
+      applyStoredData(null);
+    }
   } catch (error) {
     console.error("Failed to load stored data:", error);
-    applyStoredData(null);
+    if (!sqliteStorage?.loadStoredData()) {
+      applyStoredData(null);
+    }
   }
 }
 
