@@ -72,6 +72,9 @@ export class SessionsViewModel {
       state.logging = enabled;
     });
     this.elements.loggingStatus.textContent = enabled ? "Recording" : "Inactive";
+    if (this.elements.recDot) {
+      this.elements.recDot.classList.toggle("active", enabled);
+    }
 
     const label = enabled ? "Stop Recording" : "Start Recording";
     const icon = enabled

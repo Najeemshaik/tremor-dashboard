@@ -13,6 +13,11 @@ export class MetricsView {
   }
 
   updateClinicalMetrics() {
+    if (this.state.connection.status !== "connected") {
+      this.clearClinicalMetricsUI();
+      return;
+    }
+
     const buffer = this.state.visualization.freezeSpectrum
       ? this.state.visualization.snapshot || this.state.visualization.buffer
       : this.state.visualization.buffer;
@@ -31,6 +36,24 @@ export class MetricsView {
     this.state.clinicalMetrics.harmonic = summary.avg * 10;
 
     this.updateClinicalMetricsUI();
+  }
+
+  private clearClinicalMetricsUI() {
+    const metricEls = [
+      this.elements.metricFrequency, this.elements.metricRMS, this.elements.metricPower,
+      this.elements.metricRegularity, this.elements.metricUPDRS, this.elements.metricSNR,
+      this.elements.metricPeakToPeak, this.elements.metricBandwidth,
+      this.elements.metricStability, this.elements.metricHarmonic
+    ];
+    metricEls.forEach((el) => { if (el) el.textContent = "--"; });
+
+    const indicatorEls = [
+      this.elements.freqIndicator, this.elements.rmsIndicator, this.elements.powerIndicator,
+      this.elements.regularityIndicator, this.elements.updrsIndicator, this.elements.snrIndicator,
+      this.elements.peakToPeakIndicator, this.elements.bandwidthIndicator,
+      this.elements.stabilityIndicator, this.elements.harmonicIndicator
+    ];
+    indicatorEls.forEach((el) => { if (el) el.classList.remove("normal", "warning", "alert"); });
   }
 
   updateClinicalMetricsUI() {

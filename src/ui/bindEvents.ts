@@ -35,10 +35,6 @@ export function bindParamInputs(options: {
     onParamChange("noise", Number((event.target as HTMLInputElement).value));
     updateRangeFill(elements.noiseRange);
   });
-  elements.enableTremor.addEventListener("change", (event) => {
-    state.params.enabled = (event.target as HTMLInputElement).checked;
-    updateParamUI(state, elements);
-  });
 }
 
 export function bindSettingsEvents(options: {

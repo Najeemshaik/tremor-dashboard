@@ -8,6 +8,8 @@ export class VisualizationViewModel {
   private mockTelemetry: MockTelemetryPort;
   private bluetoothService: BluetoothServicePort;
   private visualizationView: VisualizationViewPort;
+  private sampleCounter = 0;
+  private lastSampleRateUpdate = Date.now();
 
   constructor(options: {
     store: Store<AppState>;
@@ -42,6 +44,16 @@ export class VisualizationViewModel {
   pushImuSample(imu: ImuSample) {
     const state = this.store.getState();
     if (state.visualization.freeze) return;
+
+    this.sampleCounter++;
+    const now = Date.now();
+    const elapsed = now - this.lastSampleRateUpdate;
+    if (elapsed >= 1000) {
+      const rate = Math.round((this.sampleCounter / elapsed) * 1000 * 10) / 10;
+      state.visualization.sampleRate = rate;
+      this.sampleCounter = 0;
+      this.lastSampleRateUpdate = now;
+    }
 
     const axes: ImuAxis[] = ["ax", "ay", "az", "gx", "gy", "gz"];
     const targetLength = Math.max(60, Math.round(state.visualization.sampleRate * state.visualization.windowSeconds));

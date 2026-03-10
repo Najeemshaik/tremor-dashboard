@@ -21,15 +21,13 @@ export type Elements = {
   pingBtn: HTMLButtonElement;
   latencyTestBtn: HTMLButtonElement | null;
   latencyWarning: HTMLElement | null;
-  connectionStatusPill: HTMLElement;
-  latencyValue: HTMLElement;
-  perValue: HTMLElement;
   healthMode: HTMLElement | null;
 
   logToggleBtn: HTMLButtonElement;
   sidebarLogBtn: HTMLButtonElement;
   sessionsLogBtn: HTMLButtonElement;
   loggingStatus: HTMLElement;
+  recDot: HTMLElement | null;
 
   freqRange: HTMLInputElement;
   freqNumber: HTMLInputElement;
@@ -37,7 +35,6 @@ export type Elements = {
   ampNumber: HTMLInputElement;
   noiseRange: HTMLInputElement;
   noiseNumber: HTMLInputElement;
-  enableTremor: HTMLInputElement;
   sendBtn: HTMLButtonElement;
   stopBtn: HTMLButtonElement;
   lastSent: HTMLElement;

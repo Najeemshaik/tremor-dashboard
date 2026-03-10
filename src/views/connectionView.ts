@@ -20,8 +20,6 @@ export class ConnectionView {
 
   update() {
     const status = this.state.connection.status;
-    this.elements.connectionStatusPill.textContent = this.capitalize(status);
-    this.elements.connectionStatusPill.dataset.status = status;
     this.elements.topStatusPill.textContent = this.capitalize(status);
     this.elements.topStatusPill.dataset.status = status;
 
@@ -42,8 +40,6 @@ export class ConnectionView {
 
     const latency = this.state.connection.latency;
     const per = this.state.connection.per;
-    this.elements.latencyValue.textContent = formatNumber(latency, 0);
-    this.elements.perValue.textContent = formatNumber(per, 2);
     this.elements.topLatency.textContent = formatNumber(latency, 0);
     this.elements.topPer.textContent = formatNumber(per, 2);
 
