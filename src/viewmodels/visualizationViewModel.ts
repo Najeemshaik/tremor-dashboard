@@ -10,6 +10,7 @@ export class VisualizationViewModel {
   private visualizationView: VisualizationViewPort;
   private sampleCounter = 0;
   private lastSampleRateUpdate = Date.now();
+  private lastFreq: number | null = null;
 
   constructor(options: {
     store: Store<AppState>;
@@ -31,6 +32,17 @@ export class VisualizationViewModel {
     const state = this.store.getState();
     if (this.bluetoothService.isStreaming()) return null;
     if (state.connection.mode !== "mock" || state.connection.status !== "connected") return null;
+
+    // Reset AR model and clear buffers when frequency changes so old history doesn't bleed through
+    if (this.lastFreq !== null && this.lastFreq !== state.params.freq) {
+      this.mockTelemetry.reset();
+      const axes: ImuAxis[] = ["ax", "ay", "az", "gx", "gy", "gz"];
+      for (const axis of axes) {
+        state.visualization.axes[axis].length = 0;
+      }
+    }
+    this.lastFreq = state.params.freq;
+
     const result = this.mockTelemetry.nextSample({ delta, params: state.params });
     this.pushImuSample(result.imu);
     return { sample: result.sample, t: result.t };

@@ -94,6 +94,12 @@ export function createInitialState(): AppState {
       bandwidth: 0,
       stability: 0,
       harmonic: 0
+    },
+    rawRecord: {
+      active: false,
+      durationSec: 30,
+      remainingSec: null,
+      linesWritten: 0
     }
   };
 }

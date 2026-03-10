@@ -106,6 +106,15 @@ export type PlaybackState = {
   playing: boolean;
 };
 
+export type RawRecordState = {
+  active: boolean;
+  /** 0 = unlimited (manual stop) */
+  durationSec: number;
+  /** seconds remaining; null when not active */
+  remainingSec: number | null;
+  linesWritten: number;
+};
+
 export type ClinicalMetrics = {
   frequency: number;
   rms: number;
@@ -140,4 +149,5 @@ export type AppState = {
     dominantFreq: number[];
   };
   clinicalMetrics: ClinicalMetrics;
+  rawRecord: RawRecordState;
 };

@@ -17,6 +17,7 @@ type SerialCallbacks = {
   onStatus: (status: SerialStatus) => void;
   onSample: (sample: ImuSample) => void;
   onError: (message: string) => void;
+  onRawLine?: (line: string) => void;
 };
 
 export function isSerialAvailable(): boolean {
@@ -121,6 +122,7 @@ export class SerialService {
       this.lineBuffer = this.lineBuffer.slice(newline + 1);
       newline = this.lineBuffer.indexOf("\n");
       if (line.length > 0) {
+        this.callbacks.onRawLine?.(line);
         const sample = this.parseLine(line);
         if (sample) this.callbacks.onSample(sample);
       }

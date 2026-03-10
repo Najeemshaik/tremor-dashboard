@@ -47,8 +47,10 @@ export class ChartView {
   drawChart() {
     const canvas = this.elements.tremorCanvas;
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const width = canvas.width;
-    const height = canvas.height;
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.width / ratio;
+    const height = canvas.height / ratio;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
     const style = getComputedStyle(document.documentElement);
@@ -167,9 +169,7 @@ export class ChartView {
 
     if (this.state.visualization.mouseX !== null) {
       const mouseX = this.state.visualization.mouseX;
-      const ratio = window.devicePixelRatio || 1;
-      const canvasX = mouseX * ratio;
-      const index = Math.floor((canvasX / width) * data.length);
+      const index = Math.floor((mouseX / width) * data.length);
 
       if (index >= 0 && index < data.length) {
         const x = (index / (data.length - 1)) * width;

@@ -1,6 +1,7 @@
 import { createId } from "../core/id.js";
 import { nowTimestamp } from "../core/format.js";
 import { calculateSummary } from "../core/math.js";
+import { showToast } from "../core/toast.js";
 import { exportSessionCSV, exportSessionJSON } from "../services/export/exportService.js";
 import type { AppState, Session } from "../state/types.js";
 import type { Store } from "../state/store.js";
@@ -12,6 +13,7 @@ export class SessionsViewModel {
   private elements: Elements;
   private sessionsView: SessionsViewPort;
   private persist: () => void;
+  private onSessionSaved: (() => void) | undefined;
   private loggingTimer: number | null = null;
 
   constructor(options: {
@@ -19,11 +21,13 @@ export class SessionsViewModel {
     elements: Elements;
     sessionsView: SessionsViewPort;
     persist: () => void;
+    onSessionSaved?: () => void;
   }) {
     this.store = options.store;
     this.elements = options.elements;
     this.sessionsView = options.sessionsView;
     this.persist = options.persist;
+    this.onSessionSaved = options.onSessionSaved;
   }
 
   private get state() {
@@ -130,6 +134,7 @@ export class SessionsViewModel {
         state.activeSession = null;
       });
       this.persist();
+      showToast("Session saved — tap to view in Sessions", this.onSessionSaved);
     }
   }
 

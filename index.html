@@ -257,6 +257,43 @@
               </div>
             </div>
 
+            <!-- Record Data card (USB Serial raw capture) -->
+            <div class="db-card db-rawrec-card" id="rawRecCard">
+              <div class="db-rawrec-header">
+                <div>
+                  <h2 class="db-card-title">Record Raw Data</h2>
+                  <p class="db-card-subtitle">Save incoming serial lines to a .txt file</p>
+                </div>
+                <div class="db-rawrec-status" id="rawRecStatus" aria-live="polite">
+                  <div class="db-rec-dot" id="rawRecDot"></div>
+                  <span id="rawRecStatusText">Idle</span>
+                </div>
+              </div>
+              <div class="db-rawrec-controls">
+                <div class="db-rawrec-field">
+                  <label class="db-label-inline" for="rawRecDuration">Duration (seconds)</label>
+                  <input class="db-rawrec-input" type="number" id="rawRecDuration" min="0" max="3600" value="30" placeholder="0 = unlimited" />
+                  <span class="db-rawrec-hint">0 = record until stopped</span>
+                </div>
+                <div class="db-rawrec-actions">
+                  <button class="btn btn-primary db-action-btn" id="rawRecStartBtn">
+                    <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Record Data
+                  </button>
+                  <button class="btn btn-ghost db-action-btn" id="rawRecStopBtn" disabled>
+                    <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    </svg>
+                    Stop
+                  </button>
+                  <span class="db-rawrec-stat">Lines: <strong id="rawRecLines">0</strong></span>
+                  <span class="db-rawrec-stat db-rawrec-timer hidden" id="rawRecTimerWrap">Time left: <strong id="rawRecTimer">--</strong>s</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Waveform card (with integrated recording) -->
             <div class="db-card db-waveform-card">
               <div class="db-viz-header">
@@ -327,12 +364,12 @@
                 </div>
                 <div class="db-chart-control db-chart-slider-control">
                   <label for="windowRange">Window</label>
-                  <input type="range" id="windowRange" min="0" max="10" step="0.5" />
+                  <input type="range" id="windowRange" min="1" max="10" step="0.5" value="5" />
                   <span class="db-control-val" id="windowValue">5.0s</span>
                 </div>
                 <div class="db-chart-control db-chart-slider-control">
                   <label for="gainRange">Gain</label>
-                  <input type="range" id="gainRange" min="0.5" max="2" step="0.1" />
+                  <input type="range" id="gainRange" min="0.5" max="2" step="0.1" value="1" />
                   <span class="db-control-val" id="gainValue">1.0x</span>
                 </div>
               </div>

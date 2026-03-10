@@ -73,10 +73,7 @@ export class VisualizationView {
         : "--";
     }
     if (!this.state.visualization.freeze && this.getSample) {
-      const result = this.getSample(delta);
-      if (result) {
-        this.updateSignal(delta, result.sample, result.t);
-      }
+      this.getSample(delta);
     }
     this.chartView.drawChart();
     if (!this.state.visualization.freezeSpectrum) {

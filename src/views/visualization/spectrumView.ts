@@ -14,8 +14,10 @@ export class SpectrumView {
   drawSpectrum() {
     const canvas = this.elements.spectrumCanvas;
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const width = canvas.width;
-    const height = canvas.height;
+    const ratio = window.devicePixelRatio || 1;
+    const width = canvas.width / ratio;
+    const height = canvas.height / ratio;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
     const data = this.state.visualization.buffer;

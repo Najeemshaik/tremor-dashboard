@@ -114,6 +114,16 @@ export function bindElements(): Elements {
     settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null,
     supabaseLoadConfigBtn: $("#supabaseLoadConfigBtn") as HTMLButtonElement | null,
     supabaseClearConfigBtn: $("#supabaseClearConfigBtn") as HTMLButtonElement | null,
-    supabaseStatus: $("#supabaseStatus")
+    supabaseStatus: $("#supabaseStatus"),
+
+    rawRecCard: $("#rawRecCard") as HTMLElement | null,
+    rawRecDot: $("#rawRecDot") as HTMLElement | null,
+    rawRecStatusText: $("#rawRecStatusText") as HTMLElement | null,
+    rawRecDuration: $("#rawRecDuration") as HTMLInputElement | null,
+    rawRecStartBtn: $("#rawRecStartBtn") as HTMLButtonElement | null,
+    rawRecStopBtn: $("#rawRecStopBtn") as HTMLButtonElement | null,
+    rawRecLines: $("#rawRecLines") as HTMLElement | null,
+    rawRecTimerWrap: $("#rawRecTimerWrap") as HTMLElement | null,
+    rawRecTimer: $("#rawRecTimer") as HTMLElement | null
   };
 }

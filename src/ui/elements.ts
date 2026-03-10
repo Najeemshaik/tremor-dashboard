@@ -111,4 +111,14 @@ export type Elements = {
   supabaseLoadConfigBtn: HTMLButtonElement | null;
   supabaseClearConfigBtn: HTMLButtonElement | null;
   supabaseStatus: HTMLElement | null;
+
+  rawRecCard: HTMLElement | null;
+  rawRecDot: HTMLElement | null;
+  rawRecStatusText: HTMLElement | null;
+  rawRecDuration: HTMLInputElement | null;
+  rawRecStartBtn: HTMLButtonElement | null;
+  rawRecStopBtn: HTMLButtonElement | null;
+  rawRecLines: HTMLElement | null;
+  rawRecTimerWrap: HTMLElement | null;
+  rawRecTimer: HTMLElement | null;
 };
