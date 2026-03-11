@@ -48,4 +48,3 @@ export default async function initSqlJs(moduleConfig?: Record<string, unknown>) 
   }
   return window.initSqlJs(moduleConfig);
 }
-

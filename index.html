@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tremor Monitor Pro - Parkinson's Disease Tremor Analysis</title>
+  <title>Tremor Monitor — Clinical Dashboard</title>
   <meta name="description" content="Professional medical tremor monitoring software for Parkinson's disease analysis and assessment." />
 
   <!-- Preconnect to font CDN -->
@@ -41,18 +41,15 @@
         </button>
       </div>
 
-      <nav class="nav" role="tablist" aria-label="Primary">
-        <button class="nav-item active" id="tab-dashboard-btn" data-tab="dashboard" title="Dashboard" role="tab" aria-controls="tab-dashboard" aria-selected="true">
-          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="9"/>
-            <rect x="14" y="3" width="7" height="5"/>
-            <rect x="14" y="12" width="7" height="9"/>
-            <rect x="3" y="16" width="7" height="5"/>
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <button class="nav-item active" id="tab-dashboard-btn" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" title="Dashboard">
+          <svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
           </svg>
           <span>Dashboard</span>
         </button>
-        <button class="nav-item" id="tab-profiles-btn" data-tab="profiles" title="Profiles" role="tab" aria-controls="tab-profiles" aria-selected="false" tabindex="-1">
-          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-profiles-btn" data-tab="profiles" role="tab" aria-selected="false" aria-controls="tab-profiles" title="Profiles">
+          <svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
             <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
@@ -60,26 +57,23 @@
           </svg>
           <span>Profiles</span>
         </button>
-        <button class="nav-item" id="tab-sequences-btn" data-tab="sequences" title="Sequences" role="tab" aria-controls="tab-sequences" aria-selected="false" tabindex="-1">
-          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-sequences-btn" data-tab="sequences" role="tab" aria-selected="false" aria-controls="tab-sequences" title="Sequences">
+          <svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="5 3 19 12 5 21 5 3"/>
           </svg>
           <span>Sequences</span>
         </button>
-        <button class="nav-item" id="tab-sessions-btn" data-tab="sessions" title="Sessions" role="tab" aria-controls="tab-sessions" aria-selected="false" tabindex="-1">
-          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-sessions-btn" data-tab="sessions" role="tab" aria-selected="false" aria-controls="tab-sessions" title="Sessions">
+          <svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
           </svg>
           <span>Sessions</span>
         </button>
-        <button class="nav-item" id="tab-settings-btn" data-tab="settings" title="Settings" role="tab" aria-controls="tab-settings" aria-selected="false" tabindex="-1">
-          <svg aria-hidden="true" focusable="false" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="nav-item" id="tab-settings-btn" data-tab="settings" role="tab" aria-selected="false" aria-controls="tab-settings" title="Settings">
+          <svg class="nav-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
           <span>Settings</span>
         </button>
@@ -87,15 +81,14 @@
 
       <div class="sidebar-footer">
         <div class="status-row">
-          <span class="status-dot" id="sidebarStatusDot" aria-hidden="true"></span>
-          <span id="sidebarStatusText" aria-live="polite">Disconnected</span>
+          <span class="status-dot" id="sidebarStatusDot"></span>
+          <span id="sidebarStatusText">Disconnected</span>
         </div>
-        <button class="btn btn-ghost full" id="sidebarLogBtn" title="Start Recording">
+        <button class="btn btn-secondary" id="sidebarLogBtn" aria-label="Toggle recording">
           <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="3"/>
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
           </svg>
-          <span class="btn-text">Start Recording</span>
+          <span class="btn-text">Record</span>
         </button>
       </div>
     </aside>
@@ -119,8 +112,29 @@
             <p class="subtitle">Real-time Tremor Analysis</p>
           </div>
         </div>
-        <div class="topbar-status">
-          <div class="status-pill" id="topStatusPill" data-status="disconnected" role="status" aria-live="polite">Disconnected</div>
+
+        <!-- Connection controls inline in topbar -->
+        <div class="topbar-connection" id="topbarConnection">
+          <select id="connectionMode" class="topbar-select" aria-label="Connection mode">
+            <option value="mock">Simulation</option>
+            <option value="bluetooth">Bluetooth</option>
+            <option value="cable">USB Serial</option>
+          </select>
+          <button class="btn btn-primary topbar-connect-btn" id="connectBtn">
+            <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5l7 7-7 7"/>
+            </svg>
+            Connect
+          </button>
+          <button class="btn btn-ghost topbar-icon-btn" id="pingBtn" title="Ping device" aria-label="Ping device">
+            <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </button>
+          <div class="status-pill topbar-status-pill" id="topStatusPill" data-status="disconnected" role="status" aria-live="polite">Disconnected</div>
+        </div>
+
+        <div class="topbar-right">
           <div class="metric-inline">
             <span>Latency</span>
             <strong id="topLatency">--</strong>
@@ -152,496 +166,342 @@
 
       <!-- Dashboard Tab -->
       <section id="tab-dashboard" class="tab-panel active" role="tabpanel" aria-labelledby="tab-dashboard-btn">
-        <div class="grid dashboard-grid">
-          <!-- Connection Card -->
-          <div class="card span-4">
-            <div class="card-header">
-              <div>
-                <h2>Connection</h2>
-                <p class="muted">Device connectivity status</p>
-              </div>
-              <div class="status-pill" id="connectionStatusPill" data-status="disconnected" role="status" aria-live="polite">Disconnected</div>
-            </div>
-            <div class="field">
-              <label for="connectionMode">Connection Mode</label>
-              <select id="connectionMode">
-                <option value="mock">Simulation Mode</option>
-                <option value="bluetooth">Bluetooth</option>
-                <option value="cable">USB Cable (Stub)</option>
-              </select>
-            </div>
-            <div class="button-row">
-              <button class="btn btn-primary" id="connectBtn">
-                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5 12h14"/>
-                  <path d="M12 5l7 7-7 7"/>
-                </svg>
-                Connect
-              </button>
-              <button class="btn btn-secondary" id="pingBtn">Ping</button>
-            </div>
-            <div class="metrics-row">
-              <div class="metric">
-                <span>Latency</span>
-                <strong id="latencyValue">--</strong>
-                <small>ms</small>
-              </div>
-              <div class="metric">
-                <span>Packet Error</span>
-                <strong id="perValue">--</strong>
-                <small>%</small>
-              </div>
-            </div>
-            <div class="button-row">
-              <button class="btn btn-ghost" id="latencyTestBtn">Start Latency Test</button>
-            </div>
-            <div class="muted warning-text hidden" id="latencyWarning">Latency is within target.</div>
-            <div class="divider"></div>
-            <div class="inline-row">
-              <div>
-                <div class="label">Session Recording</div>
-                <div class="muted">Status: <span id="loggingStatus" aria-live="polite">Inactive</span></div>
-              </div>
-              <button class="btn btn-ghost" id="logToggleBtn">Start</button>
-            </div>
-          </div>
+        <div class="db-layout">
 
-          <!-- Live Control Card -->
-          <div class="card span-8 param-card" id="paramCard">
-            <div class="card-header">
-              <div>
-                <h2>Tremor Parameters</h2>
-                <p class="muted">Configure real-time signal generation</p>
-              </div>
-              <div class="card-status">
-                <div class="status-pill" id="paramStatus" data-status="active">Active</div>
-                <div class="unsaved" id="unsavedIndicator" style="display: none;">
-                  <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  Unsaved
+          <!-- ══════════════════════════════════════════════════════════
+               MAIN CONTENT (full width — sidebar removed)
+               ══════════════════════════════════════════════════════════ -->
+          <div class="db-main">
+
+            <!-- Stimulation Parameters card (with integrated profile selection) -->
+            <div class="db-card db-params-card param-card" id="paramCard">
+              <div class="db-params-header">
+                <div class="db-params-title-row">
+                  <span class="db-card-title">Stimulation Parameters</span>
+                  <div class="db-params-status">
+                    <div class="status-pill" id="paramStatus" data-status="active">Active</div>
+                    <div class="db-unsaved" id="unsavedIndicator" style="display:none">
+                      <svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                      Unsaved
+                    </div>
+                  </div>
+                  <!-- Profile selector inline -->
+                  <div class="db-profile-inline">
+                    <label class="db-label db-label-inline" for="profileSelect">Profile</label>
+                    <select id="profileSelect" class="db-select db-select-sm db-select-inline"></select>
+                    <button class="btn btn-ghost db-profile-btn-sm" id="loadProfileBtn" title="Load profile">
+                      <svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Load
+                    </button>
+                    <button class="btn btn-ghost db-profile-btn-sm" id="saveProfileBtn" title="Save profile">
+                      <svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                      </svg>
+                      Save
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="field-group">
-              <div class="field" data-param="freq">
-                <label for="freqRange">Frequency (Hz)</label>
-                <div class="input-row">
-                  <input type="range" id="freqRange" min="4" max="12" step="1" list="freqTicks" />
+              <div class="db-sliders">
+                <div class="db-slider-group" data-param="freq">
+                  <div class="db-slider-header">
+                    <label class="db-slider-label" for="freqRange">Frequency</label>
+                    <span class="db-slider-unit">Hz</span>
+                    <input type="number" id="freqNumber" min="4" max="12" step="1" class="db-number-input" />
+                  </div>
+                  <input type="range" id="freqRange" min="4" max="12" step="1" list="freqTicks" class="db-range" />
                   <datalist id="freqTicks">
-                    <option value="4"></option>
-                    <option value="5"></option>
-                    <option value="6"></option>
-                    <option value="7"></option>
-                    <option value="8"></option>
-                    <option value="9"></option>
-                    <option value="10"></option>
-                    <option value="11"></option>
-                    <option value="12"></option>
+                    <option value="4"></option><option value="6"></option><option value="8"></option><option value="10"></option><option value="12"></option>
                   </datalist>
-                  <input type="number" id="freqNumber" min="4" max="12" step="1" />
+                  <div class="db-range-bounds"><span>4</span><span>12</span></div>
+                </div>
+                <div class="db-slider-group" data-param="amp">
+                  <div class="db-slider-header">
+                    <label class="db-slider-label" for="ampRange">Amplitude</label>
+                    <span class="db-slider-unit">RU</span>
+                    <input type="number" id="ampNumber" min="0" max="100" step="1" class="db-number-input" />
+                  </div>
+                  <input type="range" id="ampRange" min="0" max="100" step="1" class="db-range" />
+                  <div class="db-range-bounds"><span>0</span><span>100</span></div>
+                </div>
+                <div class="db-slider-group" data-param="noise">
+                  <div class="db-slider-header">
+                    <label class="db-slider-label" for="noiseRange">Noise</label>
+                    <span class="db-slider-unit">%</span>
+                    <input type="number" id="noiseNumber" min="0" max="100" step="1" class="db-number-input" />
+                  </div>
+                  <input type="range" id="noiseRange" min="0" max="100" step="1" class="db-range" />
+                  <div class="db-range-bounds"><span>0</span><span>100</span></div>
                 </div>
               </div>
-              <div class="field" data-param="amp">
-                <label for="ampRange">Amplitude (Relative Units)</label>
-                <div class="input-row">
-                  <input type="range" id="ampRange" min="0" max="100" step="1" />
-                  <input type="number" id="ampNumber" min="0" max="100" step="1" />
-                </div>
-              </div>
-              <div class="field" data-param="noise">
-                <label for="noiseRange">Signal Noise Level</label>
-                <div class="input-row">
-                  <input type="range" id="noiseRange" min="0" max="100" step="1" />
-                  <input type="number" id="noiseNumber" min="0" max="100" step="1" />
-                </div>
-              </div>
-            </div>
-            <div class="toggle-row">
-              <label class="switch">
-                <input type="checkbox" id="enableTremor" aria-labelledby="enableTremorLabel" aria-describedby="enableTremorHelp" />
-                <span class="slider"></span>
-              </label>
-              <div>
-                <div class="label" id="enableTremorLabel">Enable Tremor Output</div>
-                <div class="muted" id="enableTremorHelp">Generate signal based on current parameters</div>
-              </div>
-            </div>
-            <div class="button-row">
-              <button class="btn btn-primary" id="sendBtn">
-                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-                Apply Parameters
-              </button>
-              <button class="btn btn-danger" id="stopBtn">
-                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                </svg>
-                Stop
-              </button>
-            </div>
-            <div class="meta-row">
-              <span>Last applied: <strong id="lastSent">--</strong></span>
-            </div>
-          </div>
-
-          <!-- Visualization Card -->
-          <div class="card span-12">
-            <div class="card-header">
-              <div>
-                <h2>Real-Time Waveform</h2>
-                <p class="muted">Live tremor signal visualization</p>
-              </div>
-              <div class="button-row" style="margin-top: 0;">
-                <button class="btn btn-secondary" id="freezeBtn">
-                  <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="6" y="4" width="4" height="16"/>
-                    <rect x="14" y="4" width="4" height="16"/>
+              <div class="db-params-actions">
+                <button class="btn btn-primary db-action-btn" id="sendBtn">
+                  <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                   </svg>
-                  Freeze
+                  Apply Parameters
                 </button>
-                <button class="btn btn-ghost" id="snapshotBtn">Capture Snapshot</button>
-                <button class="btn btn-ghost" id="clearBtn">Clear</button>
-              </div>
-            </div>
-            <div class="chart-frame">
-              <div class="chart-y-label" aria-hidden="true">Amplitude</div>
-              <div>
-                <div class="chart-wrap" id="chartContainer" tabindex="0" role="group" aria-label="Waveform viewer" aria-describedby="chartHelp chartLive">
-                  <p id="chartHelp" class="sr-only">Use left and right arrow keys to move through the waveform. Press Escape to clear the selection.</p>
-                  <div id="chartLive" class="sr-only" aria-live="polite"></div>
-                  <canvas id="tremorCanvas" role="img" aria-label="Real-time tremor waveform chart"></canvas>
-                  <div class="chart-tooltip" id="chartTooltip" role="tooltip" aria-hidden="true">
-                    <div class="chart-tooltip-header">Signal Analysis</div>
-                    <div class="chart-tooltip-row">
-                      <span class="chart-tooltip-label">Amplitude</span>
-                      <span class="chart-tooltip-value" id="tooltipAmplitude">--</span>
-                    </div>
-                    <div class="chart-tooltip-row">
-                      <span class="chart-tooltip-label">Time</span>
-                      <span class="chart-tooltip-value" id="tooltipTime">--</span>
-                    </div>
-                    <div class="chart-tooltip-row">
-                      <span class="chart-tooltip-label">Phase</span>
-                      <span class="chart-tooltip-value" id="tooltipPhase">--</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="chart-x-label" aria-hidden="true">Time</div>
-              </div>
-            </div>
-            <div class="chart-controls">
-              <div class="control">
-                <label for="windowRange">Window</label>
-                <div class="input-row compact">
-                  <input type="range" id="windowRange" min="0" max="10" step="0.5" />
-                  <span class="control-value" id="windowValue">5.0s</span>
-                </div>
-              </div>
-              <div class="control">
-                <label for="gainRange">Gain</label>
-                <div class="input-row compact">
-                  <input type="range" id="gainRange" min="0.5" max="2" step="0.1" />
-                  <span class="control-value" id="gainValue">1.0x</span>
+                <button class="btn btn-danger db-action-btn" id="stopBtn">
+                  <svg aria-hidden="true" focusable="false" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  </svg>
+                  Stop
+                </button>
+                <span class="db-last-sent">Last applied: <strong id="lastSent">--</strong></span>
+                <div class="db-connection-aux">
+                  <button class="btn btn-ghost db-aux-btn" id="latencyTestBtn">Latency Test</button>
+                  <div class="warning-text hidden" id="latencyWarning"></div>
                 </div>
               </div>
             </div>
-            <div class="spectrum-section">
-              <div class="spectrum-header">
+
+            <!-- Record Data card (USB Serial raw capture) -->
+            <div class="db-card db-rawrec-card" id="rawRecCard">
+              <div class="db-rawrec-header">
                 <div>
-                  <h3>Power Spectrum</h3>
-                  <p class="muted">Frequency Verification (4-12 Hz)</p>
+                  <h2 class="db-card-title">Record Raw Data</h2>
+                  <p class="db-card-subtitle">Save incoming serial lines to a .txt file</p>
                 </div>
-                <div class="spectrum-controls">
-                  <div class="sample-rate">
-                    <span>Sample Rate</span>
-                    <strong id="sampleRateValue">--</strong>
-                    <small>Hz</small>
-                  </div>
-                  <button class="btn btn-ghost" id="spectrumFreezeBtn" aria-pressed="false">Freeze Spectrum</button>
+                <div class="db-rawrec-status" id="rawRecStatus" aria-live="polite">
+                  <div class="db-rec-dot" id="rawRecDot"></div>
+                  <span id="rawRecStatusText">Idle</span>
                 </div>
               </div>
-              <div class="spectrum-wrap">
+              <div class="db-rawrec-controls">
+                <div class="db-rawrec-field">
+                  <label class="db-label-inline" for="rawRecDuration">Duration (seconds)</label>
+                  <input class="db-rawrec-input" type="number" id="rawRecDuration" min="0" max="3600" value="30" placeholder="0 = unlimited" />
+                  <span class="db-rawrec-hint">0 = record until stopped</span>
+                </div>
+                <div class="db-rawrec-actions">
+                  <button class="btn btn-primary db-action-btn" id="rawRecStartBtn">
+                    <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Record Data
+                  </button>
+                  <button class="btn btn-ghost db-action-btn" id="rawRecStopBtn" disabled>
+                    <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    </svg>
+                    Stop
+                  </button>
+                  <span class="db-rawrec-stat">Lines: <strong id="rawRecLines">0</strong></span>
+                  <span class="db-rawrec-stat db-rawrec-timer hidden" id="rawRecTimerWrap">Time left: <strong id="rawRecTimer">--</strong>s</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Waveform card (with integrated recording) -->
+            <div class="db-card db-waveform-card">
+              <div class="db-viz-header">
+                <div>
+                  <h2 class="db-card-title">Real-Time Waveform</h2>
+                  <p class="db-card-subtitle">Live tremor signal</p>
+                </div>
+                <div class="db-viz-actions">
+                  <!-- Recording inline -->
+                  <div class="db-rec-inline">
+                    <div class="db-rec-dot" id="recDot"></div>
+                    <span id="loggingStatus" class="db-rec-label" aria-live="polite">Inactive</span>
+                    <button class="btn btn-ghost db-rec-btn" id="logToggleBtn">
+                      <svg aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      Record
+                    </button>
+                  </div>
+                  <div class="db-viz-divider"></div>
+                  <button class="btn btn-secondary" id="freezeBtn">
+                    <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                    Freeze
+                  </button>
+                  <button class="btn btn-ghost" id="snapshotBtn">Snapshot</button>
+                  <button class="btn btn-ghost" id="clearBtn">Clear</button>
+                </div>
+              </div>
+              <div class="chart-frame">
+                <div class="chart-y-label" aria-hidden="true">Amplitude</div>
+                <div class="db-chart-wrap-outer">
+                  <div class="chart-wrap" id="chartContainer" tabindex="0" role="group" aria-label="Waveform viewer" aria-describedby="chartHelp chartLive">
+                    <p id="chartHelp" class="sr-only">Use left and right arrow keys to move through the waveform. Press Escape to clear the selection.</p>
+                    <div id="chartLive" class="sr-only" aria-live="polite"></div>
+                    <canvas id="tremorCanvas" role="img" aria-label="Real-time tremor waveform chart"></canvas>
+                    <div class="chart-tooltip" id="chartTooltip" role="tooltip" aria-hidden="true">
+                      <div class="chart-tooltip-header">Signal Analysis</div>
+                      <div class="chart-tooltip-row">
+                        <span class="chart-tooltip-label">Amplitude</span>
+                        <span class="chart-tooltip-value" id="tooltipAmplitude">--</span>
+                      </div>
+                      <div class="chart-tooltip-row">
+                        <span class="chart-tooltip-label">Time</span>
+                        <span class="chart-tooltip-value" id="tooltipTime">--</span>
+                      </div>
+                      <div class="chart-tooltip-row">
+                        <span class="chart-tooltip-label">Phase</span>
+                        <span class="chart-tooltip-value" id="tooltipPhase">--</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="chart-x-label" aria-hidden="true">Time</div>
+                </div>
+              </div>
+              <div class="db-chart-controls">
+                <div class="db-chart-control">
+                  <label for="axisSelect">Axis</label>
+                  <select id="axisSelect" class="db-select db-select-sm">
+                    <option value="ax">Accel X</option>
+                    <option value="ay" selected>Accel Y</option>
+                    <option value="az">Accel Z</option>
+                    <option value="gx">Gyro X</option>
+                    <option value="gy">Gyro Y</option>
+                    <option value="gz">Gyro Z</option>
+                  </select>
+                </div>
+                <div class="db-chart-control db-chart-slider-control">
+                  <label for="windowRange">Window</label>
+                  <input type="range" id="windowRange" min="1" max="10" step="0.5" value="5" />
+                  <span class="db-control-val" id="windowValue">5.0s</span>
+                </div>
+                <div class="db-chart-control db-chart-slider-control">
+                  <label for="gainRange">Gain</label>
+                  <input type="range" id="gainRange" min="0.5" max="2" step="0.1" value="1" />
+                  <span class="db-control-val" id="gainValue">1.0x</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Power Spectrum card -->
+            <div class="db-card db-spectrum-card">
+              <div class="db-viz-header">
+                <div>
+                  <h2 class="db-card-title">Power Spectrum</h2>
+                  <p class="db-card-subtitle">Frequency domain · 4–12 Hz</p>
+                </div>
+                <div class="db-viz-actions">
+                  <div class="db-sample-rate">SR <strong id="sampleRateValue">--</strong> Hz</div>
+                  <button class="btn btn-ghost" id="spectrumFreezeBtn" aria-pressed="false">Freeze</button>
+                </div>
+              </div>
+              <div class="spectrum-wrap db-spectrum-wrap">
                 <canvas id="spectrumCanvas" role="img" aria-label="Power spectrum chart"></canvas>
               </div>
             </div>
 
-            <!-- Clinical Metrics Section -->
-            <div class="clinical-metrics" id="clinicalMetrics">
-              <div class="clinical-metric" data-metric="frequency" tabindex="0" aria-describedby="metricFrequencyHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                  </svg>
-                  <span class="clinical-metric-title">Dominant Frequency</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricFrequency">--</span>
-                  <span class="clinical-metric-unit">Hz</span>
-                </div>
-                <div class="clinical-metric-range">
+            <!-- Clinical Metrics card -->
+            <div class="db-card db-metrics-card">
+              <div class="db-card-title">Clinical Metrics</div>
+              <div class="db-metrics-grid" id="clinicalMetrics">
+
+                <div class="db-metric-tile" data-metric="frequency" tabindex="0" aria-describedby="metricFrequencyHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                  <div class="db-metric-value"><span id="metricFrequency">--</span><span class="db-metric-unit">Hz</span></div>
+                  <div class="db-metric-label">Frequency</div>
                   <span class="clinical-metric-indicator normal" id="freqIndicator"></span>
-                  <span>PD typical: 4-6 Hz</span>
+                  <div class="clinical-metric-tooltip" id="metricFrequencyHelp" role="tooltip">
+                    <p><strong>Tremor Frequency</strong><br>PD tremor: 4–6 Hz. Essential tremor: 5–10 Hz. Cerebellar: 3–5 Hz.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricFrequencyHelp" role="tooltip">
-                  <p><strong>Tremor Frequency</strong><br>Parkinson's disease tremor typically occurs at 4-6 Hz. Essential tremor is usually faster (5-10 Hz). Cerebellar tremor tends to be slower (3-5 Hz).</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="amplitude" tabindex="0" aria-describedby="metricRmsHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M2 12h4l3-9 6 18 3-9h4"/>
-                  </svg>
-                  <span class="clinical-metric-title">RMS Amplitude</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricRMS">--</span>
-                  <span class="clinical-metric-unit">units</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="amplitude" tabindex="0" aria-describedby="metricRmsHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 6 18 3-9h4"/></svg></div>
+                  <div class="db-metric-value"><span id="metricRMS">--</span><span class="db-metric-unit">RU</span></div>
+                  <div class="db-metric-label">RMS</div>
                   <span class="clinical-metric-indicator normal" id="rmsIndicator"></span>
-                  <span>Root Mean Square</span>
+                  <div class="clinical-metric-tooltip" id="metricRmsHelp" role="tooltip">
+                    <p><strong>RMS Amplitude</strong><br>Overall signal energy. Higher = stronger tremor.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricRmsHelp" role="tooltip">
-                  <p><strong>RMS Amplitude</strong><br>Measures overall signal energy. Higher values indicate stronger tremor. Used to quantify tremor severity according to UPDRS motor scoring.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="power" tabindex="0" aria-describedby="metricPowerHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                  <span class="clinical-metric-title">Signal Power</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricPower">--</span>
-                  <span class="clinical-metric-unit">dB</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="power" tabindex="0" aria-describedby="metricPowerHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+                  <div class="db-metric-value"><span id="metricPower">--</span><span class="db-metric-unit">dB</span></div>
+                  <div class="db-metric-label">Power</div>
                   <span class="clinical-metric-indicator normal" id="powerIndicator"></span>
-                  <span>Power Spectral Density</span>
+                  <div class="clinical-metric-tooltip" id="metricPowerHelp" role="tooltip">
+                    <p><strong>Signal Power</strong><br>Total power in 4–12 Hz band.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricPowerHelp" role="tooltip">
-                  <p><strong>Power Spectral Density</strong><br>Total power in the tremor frequency band (4-12 Hz). Correlates with UPDRS tremor subscore. Used for monitoring medication efficacy.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="regularity" tabindex="0" aria-describedby="metricRegularityHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  <span class="clinical-metric-title">Regularity Index</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricRegularity">--</span>
-                  <span class="clinical-metric-unit">%</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="regularity" tabindex="0" aria-describedby="metricRegularityHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                  <div class="db-metric-value"><span id="metricRegularity">--</span><span class="db-metric-unit">%</span></div>
+                  <div class="db-metric-label">Regularity</div>
                   <span class="clinical-metric-indicator normal" id="regularityIndicator"></span>
-                  <span>Rhythm consistency</span>
+                  <div class="clinical-metric-tooltip" id="metricRegularityHelp" role="tooltip">
+                    <p><strong>Regularity Index</strong><br>PD rest tremor: typically &gt;80%.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricRegularityHelp" role="tooltip">
-                  <p><strong>Regularity Index</strong><br>Measures how consistent the tremor rhythm is. PD rest tremor is typically very regular (>80%). Lower values may indicate physiological or action tremor.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="updrs" tabindex="0" aria-describedby="metricUpdrsHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                  </svg>
-                  <span class="clinical-metric-title">Est. UPDRS Score</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricUPDRS">--</span>
-                  <span class="clinical-metric-unit">/4</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="updrs" tabindex="0" aria-describedby="metricUpdrsHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+                  <div class="db-metric-value"><span id="metricUPDRS">--</span><span class="db-metric-unit">/4</span></div>
+                  <div class="db-metric-label">UPDRS</div>
                   <span class="clinical-metric-indicator normal" id="updrsIndicator"></span>
-                  <span>Tremor subscore</span>
+                  <div class="clinical-metric-tooltip" id="metricUpdrsHelp" role="tooltip">
+                    <p><strong>UPDRS Tremor Score</strong><br>0=None, 1=Slight, 2=Mild, 3=Moderate, 4=Severe.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricUpdrsHelp" role="tooltip">
-                  <p><strong>UPDRS Tremor Score</strong><br>Estimated score based on MDS-UPDRS Part III tremor items. 0=None, 1=Slight, 2=Mild, 3=Moderate, 4=Severe. For clinical reference only.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="snr" tabindex="0" aria-describedby="metricSnrHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                  <span class="clinical-metric-title">Signal Quality</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricSNR">--</span>
-                  <span class="clinical-metric-unit">dB</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="snr" tabindex="0" aria-describedby="metricSnrHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+                  <div class="db-metric-value"><span id="metricSNR">--</span><span class="db-metric-unit">dB</span></div>
+                  <div class="db-metric-label">SNR</div>
                   <span class="clinical-metric-indicator normal" id="snrIndicator"></span>
-                  <span>Signal-to-Noise Ratio</span>
+                  <div class="clinical-metric-tooltip" id="metricSnrHelp" role="tooltip">
+                    <p><strong>Signal-to-Noise Ratio</strong><br>&gt;20 dB = clean signal.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricSnrHelp" role="tooltip">
-                  <p><strong>Signal-to-Noise Ratio</strong><br>Quality of the tremor signal. Higher values (>20 dB) indicate clean signal. Low SNR may affect accuracy of frequency and amplitude measurements.</p>
-                </div>
-              </div>
-              <div class="clinical-metric" data-metric="peak-to-peak" tabindex="0" aria-describedby="metricPeakToPeakHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 12h4l3-9 6 18 3-9h4"/>
-                    <path d="M3 3v6M3 15v6M21 3v6M21 15v6"/>
-                  </svg>
-                  <span class="clinical-metric-title">Peak-to-Peak</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricPeakToPeak">--</span>
-                  <span class="clinical-metric-unit">units</span>
-                </div>
-                <div class="clinical-metric-range">
+
+                <div class="db-metric-tile" data-metric="peak-to-peak" tabindex="0" aria-describedby="metricPeakToPeakHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 6 18 3-9h4"/><path d="M3 3v6M3 15v6M21 3v6M21 15v6"/></svg></div>
+                  <div class="db-metric-value"><span id="metricPeakToPeak">--</span><span class="db-metric-unit">RU</span></div>
+                  <div class="db-metric-label">Pk–Pk</div>
                   <span class="clinical-metric-indicator normal" id="peakToPeakIndicator"></span>
-                  <span>Signal excursion</span>
+                  <div class="clinical-metric-tooltip" id="metricPeakToPeakHelp" role="tooltip">
+                    <p><strong>Peak-to-Peak Amplitude</strong><br>Total excursion between min and max.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricPeakToPeakHelp" role="tooltip">
-                  <p><strong>Peak-to-Peak Amplitude</strong><br>Total excursion between the minimum and maximum waveform values. Complements RMS for severity tracking.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="bandwidth" tabindex="0" aria-describedby="metricBandwidthHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="6" width="18" height="12" rx="2"/>
-                    <path d="M7 12h10"/>
-                  </svg>
-                  <span class="clinical-metric-title">Tremor Bandwidth</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricBandwidth">--</span>
-                  <span class="clinical-metric-unit">Hz</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="bandwidth" tabindex="0" aria-describedby="metricBandwidthHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 12h10"/></svg></div>
+                  <div class="db-metric-value"><span id="metricBandwidth">--</span><span class="db-metric-unit">Hz</span></div>
+                  <div class="db-metric-label">Bandwidth</div>
                   <span class="clinical-metric-indicator normal" id="bandwidthIndicator"></span>
-                  <span>Peak width</span>
+                  <div class="clinical-metric-tooltip" id="metricBandwidthHelp" role="tooltip">
+                    <p><strong>Tremor Bandwidth</strong><br>Half-power width of dominant spectral peak.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricBandwidthHelp" role="tooltip">
-                  <p><strong>Tremor Bandwidth</strong><br>Half-power width of the dominant spectral peak. Narrower bands indicate steadier tremor frequency.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="stability" tabindex="0" aria-describedby="metricStabilityHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="9"/>
-                    <path d="M12 7v5l3 3"/>
-                  </svg>
-                  <span class="clinical-metric-title">Frequency Stability</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricStability">--</span>
-                  <span class="clinical-metric-unit">%</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="stability" tabindex="0" aria-describedby="metricStabilityHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+                  <div class="db-metric-value"><span id="metricStability">--</span><span class="db-metric-unit">%</span></div>
+                  <div class="db-metric-label">Stability</div>
                   <span class="clinical-metric-indicator normal" id="stabilityIndicator"></span>
-                  <span>Dominant freq variance</span>
+                  <div class="clinical-metric-tooltip" id="metricStabilityHelp" role="tooltip">
+                    <p><strong>Frequency Stability</strong><br>Consistency of dominant frequency over time.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricStabilityHelp" role="tooltip">
-                  <p><strong>Dominant Frequency Stability</strong><br>Consistency of the dominant frequency over time. Higher values mean a steadier tremor rhythm.</p>
-                </div>
-              </div>
 
-              <div class="clinical-metric" data-metric="harmonic" tabindex="0" aria-describedby="metricHarmonicHelp">
-                <div class="clinical-metric-header">
-                  <svg aria-hidden="true" focusable="false" class="clinical-metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19c4-8 12-8 16 0"/>
-                    <path d="M4 13c4-6 12-6 16 0"/>
-                    <path d="M4 7c4-4 12-4 16 0"/>
-                  </svg>
-                  <span class="clinical-metric-title">Harmonic Ratio</span>
-                </div>
-                <div>
-                  <span class="clinical-metric-value" id="metricHarmonic">--</span>
-                  <span class="clinical-metric-unit">%</span>
-                </div>
-                <div class="clinical-metric-range">
+                <div class="db-metric-tile" data-metric="harmonic" tabindex="0" aria-describedby="metricHarmonicHelp">
+                  <div class="db-metric-icon"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19c4-8 12-8 16 0"/><path d="M4 13c4-6 12-6 16 0"/><path d="M4 7c4-4 12-4 16 0"/></svg></div>
+                  <div class="db-metric-value"><span id="metricHarmonic">--</span><span class="db-metric-unit">%</span></div>
+                  <div class="db-metric-label">Harmonic</div>
                   <span class="clinical-metric-indicator normal" id="harmonicIndicator"></span>
-                  <span>Overtones vs fundamental</span>
+                  <div class="clinical-metric-tooltip" id="metricHarmonicHelp" role="tooltip">
+                    <p><strong>Harmonic Ratio</strong><br>Energy in 2nd/3rd harmonics vs fundamental.</p>
+                  </div>
                 </div>
-                <div class="clinical-metric-tooltip" id="metricHarmonicHelp" role="tooltip">
-                  <p><strong>Harmonic Ratio</strong><br>Relative energy in the 2nd and 3rd harmonics compared with the fundamental. High values indicate a less pure tremor waveform.</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Quick Profile Actions -->
-          <div class="card span-6">
-            <div class="card-header">
-              <div>
-                <h2>Quick Actions</h2>
-                <p class="muted">Load or save parameter presets</p>
               </div>
             </div>
-            <div class="field">
-              <label for="profileSelect">Select Profile</label>
-              <select id="profileSelect"></select>
-            </div>
-            <div class="button-row">
-              <button class="btn btn-secondary" id="loadProfileBtn">
-                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Load Profile
-              </button>
-              <button class="btn btn-primary" id="saveProfileBtn">
-                <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                  <polyline points="17 21 17 13 7 13 7 21"/>
-                  <polyline points="7 3 7 8 15 8"/>
-                </svg>
-                Save Current
-              </button>
-            </div>
-          </div>
 
-          <!-- System Health -->
-          <div class="card span-6">
-            <div class="card-header">
-              <div>
-                <h2>System Status</h2>
-                <p class="muted">Device telemetry overview</p>
-              </div>
-            </div>
-            <div class="health-grid">
-              <div class="health-item">
-                <span>Battery</span>
-                <strong id="healthBattery">92%</strong>
-              </div>
-              <div class="health-item">
-                <span>Temperature</span>
-                <strong id="healthTemp">37°C</strong>
-              </div>
-              <div class="health-item">
-                <span>Firmware</span>
-                <strong id="healthFirmware">v1.4.2</strong>
-              </div>
-              <div class="health-item">
-                <span>Mode</span>
-                <strong id="healthMode">Simulation</strong>
-              </div>
-            </div>
-          </div>
-        </div>
+          </div><!-- /db-main -->
+        </div><!-- /db-layout -->
       </section>
 
       <!-- Profiles Tab -->
@@ -755,6 +615,14 @@
             <p class="muted">Review and export recorded tremor data</p>
           </div>
           <div class="button-row" style="margin-top: 0;">
+            <button class="btn btn-ghost" id="importSessionBtn">
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Import .txt
+            </button>
             <button class="btn btn-primary" id="sessionsLogBtn">
               <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -882,7 +750,7 @@
           <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
         </svg>
       </div>
-      <h1 id="configOverlayTitle" class="config-overlay-title">Tremor Monitor Pro</h1>
+      <h1 id="configOverlayTitle" class="config-overlay-title">Tremor Monitor</h1>
       <p class="config-overlay-subtitle">Select your Supabase config file to continue</p>
       <p class="config-overlay-hint">The file should be a JSON file containing your <code>url</code>, <code>anonKey</code>, and optionally <code>table</code>.</p>
       <button type="button" class="btn btn-primary config-overlay-btn" id="configOverlayBtn">

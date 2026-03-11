@@ -4,6 +4,8 @@ import { BLE_CONFIG } from "./services/bluetooth/bleConfig.js";
 import { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
+import { SerialService } from "./services/serial/serialService.js";
+import { RawRecordService } from "./services/rawRecord/rawRecordService.js";
 import { persistStoredData } from "./services/storage/storageService.js";
 import { createPersistenceQueue } from "./services/storage/persistenceQueue.js";
 import { DatabaseService } from "./services/database/database.js";
@@ -58,6 +60,7 @@ export async function createAppDependencies(): Promise<AppDependencies> {
   let profilesViewModel: ProfilesViewModel;
   let sequencesViewModel: SequencesViewModel;
   let sessionsViewModel: SessionsViewModel;
+  let tabsView: TabsView;
 
   const bluetoothService = new BluetoothService({
     state,
@@ -79,6 +82,63 @@ export async function createAppDependencies(): Promise<AppDependencies> {
       state.connection.latency = latency;
       state.connection.per = per;
       connectionView?.update();
+    }
+  });
+
+  const rawRecordService = new RawRecordService({
+    store,
+    callbacks: {
+      onUpdate: () => updateRawRecUI()
+    }
+  });
+
+  function updateRawRecUI() {
+    const s = store.getState().rawRecord;
+    const el = elements;
+    if (!el.rawRecCard) return;
+    const active = s.active;
+    el.rawRecDot?.classList.toggle("active", active);
+    if (el.rawRecStatusText) {
+      if (active) {
+        const dur = s.durationSec;
+        el.rawRecStatusText.textContent = dur > 0
+          ? `Recording… ${s.remainingSec ?? 0}s left`
+          : "Recording…";
+      } else {
+        el.rawRecStatusText.textContent = "Idle";
+      }
+    }
+    if (el.rawRecLines) el.rawRecLines.textContent = String(s.linesWritten);
+    if (el.rawRecStartBtn) el.rawRecStartBtn.disabled = active;
+    if (el.rawRecStopBtn) el.rawRecStopBtn.disabled = !active;
+    if (el.rawRecTimerWrap) {
+      const show = active && s.durationSec > 0;
+      el.rawRecTimerWrap.classList.toggle("hidden", !show);
+      if (show && el.rawRecTimer) el.rawRecTimer.textContent = String(s.remainingSec ?? 0);
+    }
+    // Hide entire card unless cable mode
+    el.rawRecCard.classList.toggle("hidden", state.connection.mode !== "cable");
+  }
+
+  const serialService = new SerialService({
+    onStatus: (status) => {
+      store.update((s) => {
+        s.connection.status = status;
+        if (status === "disconnected") {
+          bluetoothService.resetConnectionMetrics();
+        }
+      });
+      connectionView?.update();
+      updateRawRecUI();
+    },
+    onSample: (imu) => {
+      visualizationViewModel?.pushImuSample(imu);
+    },
+    onRawLine: (line) => {
+      rawRecordService.pushLine(line);
+    },
+    onError: (message) => {
+      console.error("Serial error:", message);
     }
   });
 
@@ -128,11 +188,17 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     store,
     bluetoothService,
     mockConnection,
+    serialService,
     connectionView
   });
 
   const persistenceQueue = createPersistenceQueue({
-    persist: persistStoredData,
+    persist: async (payload) => {
+      // Always persist locally via SQLite first
+      sqliteStorage?.persistStoredData(payload);
+      // Sync to Supabase if configured
+      await persistStoredData(payload);
+    },
     debounceMs: 350
   });
 
@@ -175,7 +241,8 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     store,
     elements,
     sessionsView,
-    persist
+    persist,
+    onSessionSaved: () => tabsView?.navigateTo("sessions")
   });
 
   profilesViewModel = new ProfilesViewModel({
@@ -193,13 +260,16 @@ export async function createAppDependencies(): Promise<AppDependencies> {
     bluetoothService
   });
 
-  const tabsView = new TabsView({ elements, onTabChange: () => sidebarView.setSidebarOpen(false) });
+  tabsView = new TabsView({ elements, onTabChange: () => sidebarView.setSidebarOpen(false) });
 
   return {
     store,
     elements,
     bluetoothService,
     mockConnection,
+    serialService,
+    rawRecordService,
+    updateRawRecUI,
     mockTelemetry,
     connectionView,
     modalManager,

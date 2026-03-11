@@ -1,4 +1,4 @@
-import { calculateSummary, calculateWindowedRMS } from "../../core/math.js";
+import { calculateSummary, calculateWindowedRMS, calculateDominantFrequency } from "../../core/math.js";
 import { formatNumber } from "../../core/format.js";
 import type { AppState } from "../../state/types.js";
 import type { Elements } from "../../ui/elements.js";
@@ -13,24 +13,49 @@ export class MetricsView {
   }
 
   updateClinicalMetrics() {
+    if (this.state.connection.status !== "connected") {
+      this.clearClinicalMetricsUI();
+      return;
+    }
+
     const buffer = this.state.visualization.freezeSpectrum
       ? this.state.visualization.snapshot || this.state.visualization.buffer
       : this.state.visualization.buffer;
     const summary = calculateSummary(buffer);
     const rms = calculateWindowedRMS(buffer, 20);
+    const sampleRate = this.state.visualization.sampleRate || 40;
+    const dominantFreq = calculateDominantFrequency(buffer, sampleRate);
 
-    this.state.clinicalMetrics.frequency = summary.avg;
+    this.state.clinicalMetrics.frequency = dominantFreq;
     this.state.clinicalMetrics.rms = rms;
-    this.state.clinicalMetrics.power = summary.peak;
-    this.state.clinicalMetrics.regularity = summary.noise * 100;
-    this.state.clinicalMetrics.updrs = summary.noise > 0.5 ? 2 : 1;
-    this.state.clinicalMetrics.snr = Math.max(0, 100 - summary.noise * 100);
+    this.state.clinicalMetrics.power = summary.rms * summary.rms;
+    this.state.clinicalMetrics.regularity = summary.rms > 0 ? Math.max(0, 100 - (summary.noise / summary.rms) * 100) : 0;
+    this.state.clinicalMetrics.updrs = dominantFreq >= 4 && dominantFreq <= 6 ? 2 : dominantFreq > 6 ? 3 : 1;
+    this.state.clinicalMetrics.snr = summary.noise > 0 ? Math.min(60, 20 * Math.log10(summary.rms / summary.noise)) : 60;
     this.state.clinicalMetrics.peakToPeak = summary.peak * 2;
-    this.state.clinicalMetrics.bandwidth = Math.max(0.2, summary.noise * 0.2);
-    this.state.clinicalMetrics.stability = Math.max(0, 100 - summary.noise * 100);
-    this.state.clinicalMetrics.harmonic = summary.avg * 10;
+    this.state.clinicalMetrics.bandwidth = Math.max(0.2, summary.noise * 2);
+    this.state.clinicalMetrics.stability = summary.rms > 0 ? Math.max(0, 100 - (summary.noise / summary.rms) * 100) : 0;
+    this.state.clinicalMetrics.harmonic = dominantFreq > 0 ? dominantFreq * 2 : 0;
 
     this.updateClinicalMetricsUI();
+  }
+
+  private clearClinicalMetricsUI() {
+    const metricEls = [
+      this.elements.metricFrequency, this.elements.metricRMS, this.elements.metricPower,
+      this.elements.metricRegularity, this.elements.metricUPDRS, this.elements.metricSNR,
+      this.elements.metricPeakToPeak, this.elements.metricBandwidth,
+      this.elements.metricStability, this.elements.metricHarmonic
+    ];
+    metricEls.forEach((el) => { if (el) el.textContent = "--"; });
+
+    const indicatorEls = [
+      this.elements.freqIndicator, this.elements.rmsIndicator, this.elements.powerIndicator,
+      this.elements.regularityIndicator, this.elements.updrsIndicator, this.elements.snrIndicator,
+      this.elements.peakToPeakIndicator, this.elements.bandwidthIndicator,
+      this.elements.stabilityIndicator, this.elements.harmonicIndicator
+    ];
+    indicatorEls.forEach((el) => { if (el) el.classList.remove("normal", "warning", "alert"); });
   }
 
   updateClinicalMetricsUI() {

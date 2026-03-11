@@ -1,3 +1,4 @@
+import { formatNumber } from "../core/format.js";
 import type { AppState } from "../state/types.js";
 import type { Elements } from "../ui/elements.js";
 import { ChartView } from "./visualization/chartView.js";
@@ -65,22 +66,14 @@ export class VisualizationView {
     if (!this.lastFrame) this.lastFrame = timestamp;
     const delta = (timestamp - this.lastFrame) / 1000;
     this.lastFrame = timestamp;
-    if (delta > 0) {
-      const instantRate = 1 / delta;
-      this.state.visualization.sampleRate =
-        this.state.visualization.sampleRate * 0.9 + instantRate * 0.1;
-    }
     if (this.elements.sampleRateValue) {
-      this.elements.sampleRateValue.textContent = this.formatNumber(
-        this.state.visualization.sampleRate,
-        1
-      );
+      const connected = this.state.connection.status === "connected";
+      this.elements.sampleRateValue.textContent = connected
+        ? formatNumber(this.state.visualization.sampleRate, 1)
+        : "--";
     }
     if (!this.state.visualization.freeze && this.getSample) {
-      const result = this.getSample(delta);
-      if (result) {
-        this.updateSignal(delta, result.sample, result.t);
-      }
+      this.getSample(delta);
     }
     this.chartView.drawChart();
     if (!this.state.visualization.freezeSpectrum) {
@@ -155,7 +148,7 @@ export class VisualizationView {
     if (!data.length) return;
     const value = data[index];
     const timeSeconds = this.state.visualization.windowSeconds * (index / data.length);
-    const amplitude = this.formatNumber(value, 2);
+    const amplitude = formatNumber(value, 2);
 
     const tooltip = this.elements.chartTooltip;
     if (!tooltip) return;
@@ -192,11 +185,11 @@ export class VisualizationView {
     if (timeEl) timeEl.textContent = `${timeSeconds.toFixed(2)}s`;
     if (phaseEl) {
       const phase = (timeSeconds * this.state.params.freq * 360) % 360;
-      phaseEl.textContent = `${this.formatNumber(phase, 0)}°`;
+      phaseEl.textContent = `${formatNumber(phase, 0)}°`;
     }
 
     if (this.elements.chartLive) {
-      const phaseText = this.formatNumber((timeSeconds * this.state.params.freq * 360) % 360, 0);
+      const phaseText = formatNumber((timeSeconds * this.state.params.freq * 360) % 360, 0);
       this.elements.chartLive.textContent = `Amplitude ${amplitude}, time ${timeSeconds.toFixed(
         2
       )} seconds, phase ${phaseText} degrees.`;
@@ -216,10 +209,4 @@ export class VisualizationView {
     }
   }
 
-  private formatNumber(value: number | null | undefined, decimals = 1) {
-    if (value === null || value === undefined || Number.isNaN(value)) {
-      return "--";
-    }
-    return Number(value).toFixed(decimals);
-  }
 }

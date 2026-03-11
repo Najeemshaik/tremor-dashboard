@@ -47,6 +47,15 @@ export function createInitialState(): AppState {
     activeSession: null,
     visualization: {
       buffer: new Array(300).fill(0),
+      axes: {
+        ax: new Array(300).fill(0),
+        ay: new Array(300).fill(0),
+        az: new Array(300).fill(0),
+        gx: new Array(300).fill(0),
+        gy: new Array(300).fill(0),
+        gz: new Array(300).fill(0)
+      },
+      selectedAxis: "ay" as const,
       t: 0,
       freeze: false,
       lastSample: 0,
@@ -85,6 +94,12 @@ export function createInitialState(): AppState {
       bandwidth: 0,
       stability: 0,
       harmonic: 0
+    },
+    rawRecord: {
+      active: false,
+      durationSec: 30,
+      remainingSec: null,
+      linesWritten: 0
     }
   };
 }

@@ -47,7 +47,6 @@ export class ParamsViewModel {
 
   handleStop() {
     this.store.update((state) => {
-      state.params.enabled = false;
       state.params.amp = 0;
     });
     this.updateParamUI();

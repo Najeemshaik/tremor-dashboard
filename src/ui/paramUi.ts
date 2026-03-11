@@ -17,8 +17,6 @@ export function updateParamUI(state: AppState, elements: Elements) {
   elements.ampNumber.value = String(state.params.amp);
   elements.noiseRange.value = String(state.params.noise);
   elements.noiseNumber.value = String(state.params.noise);
-  elements.enableTremor.checked = state.params.enabled;
-
   updateRangeFill(elements.freqRange);
   updateRangeFill(elements.ampRange);
   updateRangeFill(elements.noiseRange);
@@ -27,7 +25,6 @@ export function updateParamUI(state: AppState, elements: Elements) {
   const isApplied = Boolean(state.lastSentAt) && !dirty;
   elements.unsavedIndicator.style.display = dirty ? "inline-flex" : "none";
   elements.paramStatus.style.display = dirty ? "none" : "inline-flex";
-  elements.paramCard.classList.toggle("is-stale", !isApplied);
   if (dirty) return;
   if (isApplied) {
     elements.paramStatus.textContent = "Active";
@@ -50,7 +47,6 @@ export function isDirty(state: AppState) {
   return (
     state.params.freq !== state.lastSent.freq ||
     state.params.amp !== state.lastSent.amp ||
-    state.params.noise !== state.lastSent.noise ||
-    state.params.enabled !== state.lastSent.enabled
+    state.params.noise !== state.lastSent.noise
   );
 }

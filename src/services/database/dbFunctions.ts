@@ -85,17 +85,12 @@ export function insertMany(db: Database, tableName: string, columns: string[], r
   const placeholders = columns.map(() => "?").join(", ");
   const sql = `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${placeholders})`;
   const statement = db.prepare(sql);
-  db.exec("BEGIN TRANSACTION");
   try {
     rows.forEach((row) => {
       statement.bind(row);
       statement.step();
       statement.reset();
     });
-    db.exec("COMMIT");
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
   } finally {
     statement.free();
   }

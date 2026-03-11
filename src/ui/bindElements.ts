@@ -25,15 +25,13 @@ export function bindElements(): Elements {
     pingBtn: $("#pingBtn") as HTMLButtonElement,
     latencyTestBtn: $("#latencyTestBtn") as HTMLButtonElement | null,
     latencyWarning: $("#latencyWarning"),
-    connectionStatusPill: $("#connectionStatusPill") as HTMLElement,
-    latencyValue: $("#latencyValue") as HTMLElement,
-    perValue: $("#perValue") as HTMLElement,
     healthMode: $("#healthMode"),
 
     logToggleBtn: $("#logToggleBtn") as HTMLButtonElement,
     sidebarLogBtn: $("#sidebarLogBtn") as HTMLButtonElement,
     sessionsLogBtn: $("#sessionsLogBtn") as HTMLButtonElement,
     loggingStatus: $("#loggingStatus") as HTMLElement,
+    recDot: $("#recDot") as HTMLElement | null,
 
     freqRange: $("#freqRange") as HTMLInputElement,
     freqNumber: $("#freqNumber") as HTMLInputElement,
@@ -41,7 +39,6 @@ export function bindElements(): Elements {
     ampNumber: $("#ampNumber") as HTMLInputElement,
     noiseRange: $("#noiseRange") as HTMLInputElement,
     noiseNumber: $("#noiseNumber") as HTMLInputElement,
-    enableTremor: $("#enableTremor") as HTMLInputElement,
     sendBtn: $("#sendBtn") as HTMLButtonElement,
     stopBtn: $("#stopBtn") as HTMLButtonElement,
     lastSent: $("#lastSent") as HTMLElement,
@@ -63,6 +60,7 @@ export function bindElements(): Elements {
     gainRange: $("#gainRange") as HTMLInputElement | null,
     gainValue: $("#gainValue"),
     snapshotBtn: $("#snapshotBtn") as HTMLButtonElement | null,
+    axisSelect: $("#axisSelect") as HTMLSelectElement | null,
 
     metricFrequency: $("#metricFrequency") as HTMLElement,
     metricRMS: $("#metricRMS") as HTMLElement,
@@ -102,6 +100,7 @@ export function bindElements(): Elements {
     sequencesEmpty: $("#sequencesEmpty") as HTMLElement,
     newSequenceBtn: $("#newSequenceBtn") as HTMLButtonElement,
 
+    importSessionBtn: $("#importSessionBtn") as HTMLButtonElement | null,
     sessionsTable: $("#sessionsTable tbody") as HTMLElement,
     sessionsEmpty: $("#sessionsEmpty") as HTMLElement,
     sessionModal: $("#sessionModal") as HTMLElement,
@@ -115,6 +114,16 @@ export function bindElements(): Elements {
     settingHighContrast: $("#settingHighContrast") as HTMLInputElement | null,
     supabaseLoadConfigBtn: $("#supabaseLoadConfigBtn") as HTMLButtonElement | null,
     supabaseClearConfigBtn: $("#supabaseClearConfigBtn") as HTMLButtonElement | null,
-    supabaseStatus: $("#supabaseStatus")
+    supabaseStatus: $("#supabaseStatus"),
+
+    rawRecCard: $("#rawRecCard") as HTMLElement | null,
+    rawRecDot: $("#rawRecDot") as HTMLElement | null,
+    rawRecStatusText: $("#rawRecStatusText") as HTMLElement | null,
+    rawRecDuration: $("#rawRecDuration") as HTMLInputElement | null,
+    rawRecStartBtn: $("#rawRecStartBtn") as HTMLButtonElement | null,
+    rawRecStopBtn: $("#rawRecStopBtn") as HTMLButtonElement | null,
+    rawRecLines: $("#rawRecLines") as HTMLElement | null,
+    rawRecTimerWrap: $("#rawRecTimerWrap") as HTMLElement | null,
+    rawRecTimer: $("#rawRecTimer") as HTMLElement | null
   };
 }

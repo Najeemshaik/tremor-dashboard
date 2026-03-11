@@ -117,7 +117,13 @@ export class SessionsView {
     this.elements.deleteSessionBtn.dataset.id = session.id;
     this.modalManager.open(this.elements.sessionModal);
 
-    setTimeout(() => this.drawSessionChart(session.samples), 50);
+    // Draw after the modal's CSS transition finishes so getBoundingClientRect
+    // returns the final, un-transformed dimensions.
+    const drawOnce = () => {
+      this.elements.sessionModal.removeEventListener("transitionend", drawOnce);
+      this.drawSessionChart(session.samples);
+    };
+    this.elements.sessionModal.addEventListener("transitionend", drawOnce);
   }
 
   closeSessionModal() {
@@ -126,10 +132,11 @@ export class SessionsView {
 
   private drawSessionChart(samples: number[]) {
     const canvas = this.elements.sessionCanvas as HTMLCanvasElement;
-    this.resizeCanvas(canvas);
+    const ratio = this.resizeCanvas(canvas);
     const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const width = canvas.width;
-    const height = canvas.height;
+    ctx.scale(ratio, ratio);
+    const width = canvas.width / ratio;
+    const height = canvas.height / ratio;
     ctx.clearRect(0, 0, width, height);
 
     const style = getComputedStyle(document.documentElement);
@@ -150,8 +157,9 @@ export class SessionsView {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.beginPath();
+    const step = samples.length > 1 ? width / (samples.length - 1) : width;
     samples.forEach((value, index) => {
-      const x = (index / (samples.length - 1)) * width;
+      const x = index * step;
       const y = mid - value * scale;
       if (index === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -159,10 +167,11 @@ export class SessionsView {
     ctx.stroke();
   }
 
-  private resizeCanvas(canvas: HTMLCanvasElement) {
-    const rect = canvas.getBoundingClientRect();
+  private resizeCanvas(canvas: HTMLCanvasElement): number {
     const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * ratio;
     canvas.height = rect.height * ratio;
+    return ratio;
   }
 }

@@ -1,6 +1,7 @@
 import { createId } from "../core/id.js";
 import { nowTimestamp } from "../core/format.js";
 import { calculateSummary } from "../core/math.js";
+import { showToast } from "../core/toast.js";
 import { exportSessionCSV, exportSessionJSON } from "../services/export/exportService.js";
 import type { AppState, Session } from "../state/types.js";
 import type { Store } from "../state/store.js";
@@ -12,6 +13,7 @@ export class SessionsViewModel {
   private elements: Elements;
   private sessionsView: SessionsViewPort;
   private persist: () => void;
+  private onSessionSaved: (() => void) | undefined;
   private loggingTimer: number | null = null;
 
   constructor(options: {
@@ -19,11 +21,13 @@ export class SessionsViewModel {
     elements: Elements;
     sessionsView: SessionsViewPort;
     persist: () => void;
+    onSessionSaved?: () => void;
   }) {
     this.store = options.store;
     this.elements = options.elements;
     this.sessionsView = options.sessionsView;
     this.persist = options.persist;
+    this.onSessionSaved = options.onSessionSaved;
   }
 
   private get state() {
@@ -72,6 +76,9 @@ export class SessionsViewModel {
       state.logging = enabled;
     });
     this.elements.loggingStatus.textContent = enabled ? "Recording" : "Inactive";
+    if (this.elements.recDot) {
+      this.elements.recDot.classList.toggle("active", enabled);
+    }
 
     const label = enabled ? "Stop Recording" : "Start Recording";
     const icon = enabled
@@ -127,6 +134,7 @@ export class SessionsViewModel {
         state.activeSession = null;
       });
       this.persist();
+      showToast("Session saved — tap to view in Sessions", this.onSessionSaved);
     }
   }
 
@@ -150,6 +158,55 @@ export class SessionsViewModel {
       clearInterval(this.loggingTimer);
       this.loggingTimer = null;
     }
+  }
+
+  /**
+   * Parse a .txt CSV file (format: timestamp_ms, ax, ay, az, gx, gy, gz)
+   * and import it as a new session using the ay column as the signal.
+   */
+  async handleImportFile(file: File): Promise<void> {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+
+    const samples: number[] = [];
+    let tFirst: number | null = null;
+    let tLast = 0;
+
+    for (const line of lines) {
+      const cols = line.split(",");
+      if (cols.length < 7) continue;
+      const nums = cols.map((c) => parseFloat(c.trim()));
+      if (nums.some((n) => !Number.isFinite(n))) continue;
+      const [t, , ay] = nums;
+      if (tFirst === null) tFirst = t;
+      tLast = t;
+      samples.push(ay);
+    }
+
+    if (samples.length === 0) {
+      window.alert("No valid data found in file. Expected format: timestamp, ax, ay, az, gx, gy, gz");
+      return;
+    }
+
+    const rawDuration = tLast - (tFirst ?? 0);
+    const durationSec = rawDuration > 1000 ? rawDuration / 1000 : rawDuration;
+    const summary = calculateSummary(samples);
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+
+    const session: Session = {
+      id: createId("session"),
+      name: baseName,
+      start: nowTimestamp(),
+      durationSec: Math.max(1, Math.round(durationSec)),
+      sampleCount: samples.length,
+      samples,
+      summary
+    };
+
+    this.store.update((state) => {
+      state.sessions.unshift(session);
+    });
+    this.persist();
   }
 
   private findSession(id: string): Session | undefined {

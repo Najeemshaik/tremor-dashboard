@@ -2,23 +2,27 @@ import type { AppState } from "../state/types.js";
 import type { Store } from "../state/store.js";
 import type { BluetoothServicePort, MockConnectionPort } from "../services/types.js";
 import type { ConnectionViewPort } from "./ports.js";
+import type { SerialService } from "../services/serial/serialService.js";
 
 export class ConnectionViewModel {
   private store: Store<AppState>;
   private bluetoothService: BluetoothServicePort;
   private mockConnection: MockConnectionPort;
   private connectionView: ConnectionViewPort;
+  private serialService: SerialService;
 
   constructor(options: {
     store: Store<AppState>;
     bluetoothService: BluetoothServicePort;
     mockConnection: MockConnectionPort;
     connectionView: ConnectionViewPort;
+    serialService: SerialService;
   }) {
     this.store = options.store;
     this.bluetoothService = options.bluetoothService;
     this.mockConnection = options.mockConnection;
     this.connectionView = options.connectionView;
+    this.serialService = options.serialService;
   }
 
   private get state() {
@@ -44,12 +48,11 @@ export class ConnectionViewModel {
       return;
     }
     if (this.state.connection.mode === "cable") {
-      window.alert("USB Cable mode is a stub. Connect logic is not implemented yet.");
-      this.store.update((state) => {
-        state.connection.status = "disconnected";
-        this.bluetoothService.resetConnectionMetrics();
-      });
-      this.updateView();
+      if (this.state.connection.status === "connected") {
+        await this.serialService.disconnect();
+      } else if (this.state.connection.status === "disconnected") {
+        await this.serialService.connect();
+      }
       return;
     }
 
@@ -69,7 +72,7 @@ export class ConnectionViewModel {
       return;
     }
     if (this.state.connection.mode === "cable") {
-      window.alert("USB Cable mode is a stub. Ping is not available.");
+      // Serial does not support ping — no-op
       return;
     }
     this.mockConnection.ping();
@@ -84,11 +87,7 @@ export class ConnectionViewModel {
     } else if (this.state.connection.mode === "mock") {
       this.mockConnection.disconnect();
     } else if (this.state.connection.mode === "cable") {
-      this.store.update((state) => {
-        state.connection.status = "disconnected";
-        this.bluetoothService.resetConnectionMetrics();
-      });
-      this.updateView();
+      await this.serialService.disconnect();
     }
     this.store.update((state) => {
       state.connection.mode = nextMode;

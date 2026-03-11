@@ -39,6 +39,11 @@ export class TabsView {
     }
   }
 
+  navigateTo(tabId: string) {
+    this.setActiveTab(tabId, { focus: false });
+    this.onTabChange();
+  }
+
   private setActiveTab(tabId: string, { focus = false }: { focus?: boolean } = {}) {
     this.elements.tabs.forEach((btn: HTMLElement) => {
       const isActive = btn.dataset.tab === tabId;

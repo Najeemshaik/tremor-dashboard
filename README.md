@@ -37,6 +37,14 @@ A browser-native application that connects to a wearable BLE sensor, streams acc
 
 ---
 
+## Prerequisites
+
+- Node.js 18+ and npm
+- Chrome or Edge (desktop) for Web Bluetooth / Web Serial
+- Secure context for hardware APIs: `https://` or `http://localhost`
+
+---
+
 ## Quick Start
 
 ```bash
@@ -48,10 +56,12 @@ npm run build
 
 # 3. Serve (Bluetooth requires a secure context)
 python3 -m http.server 5173
-# or: npx serve dist/
+# or: npx serve . -l 5173
 ```
 
 Open `http://localhost:5173`.
+
+> Serve the project root (not `dist/`). `index.html` loads `styles.css`, `lib/sql-wasm.wasm`, and `dist/src/main.js` via relative paths.
 
 ---
 
@@ -64,6 +74,25 @@ npm test               # Run Vitest (single pass)
 npm run test:watch     # Vitest in watch mode
 npm run test:vm        # Build + run viewmodel harness in Node
 ```
+
+---
+
+## Development Workflow
+
+```bash
+# terminal 1: rebuild TS continuously
+npm run build:watch
+
+# terminal 2: serve project root
+python3 -m http.server 5173
+# or: npx serve . -l 5173
+```
+
+Open `http://localhost:5173` and hard-refresh after structural HTML/CSS changes.
+
+This project runs as browser ESM without a bundler:
+- Runtime entry: `index.html`
+- Module entry: `dist/src/main.js`
 
 ---
 
@@ -103,6 +132,20 @@ Create a `supabase.config.json` file (never commit this):
 In the app: **Settings → Supabase Storage → Load Config File**, then select the file.
 
 > The config is cached in the browser's Origin Private File System (OPFS) so you only need to load it once.
+> Do not commit `supabase.config.json` or hard-code keys in source control.
+
+### Security Notes
+
+- Never commit Supabase keys or `supabase.config.json`.
+- Treat leaked anon keys as compromised and rotate them in Supabase.
+- Keep table access constrained with RLS/policies appropriate for your deployment model.
+- Prefer HTTPS in production so browser and API traffic stay encrypted.
+
+### First Launch Behavior
+
+- On startup, if no stored Supabase config exists, the app shows a blocking config overlay.
+- After selecting a valid config file once, the file handle is cached and reused on future loads.
+- Local SQLite is still used for fast local persistence, then synced to Supabase when configured.
 
 ---
 
@@ -115,6 +158,15 @@ In the app: **Settings → Supabase Storage → Load Config File**, then select 
 | **Cable** | Reserved for future wired transport |
 
 The mock signal only runs when explicitly connected in **Mock** mode — it does not auto-play on launch.
+
+---
+
+## Current Limitations
+
+- First launch blocks on Supabase config file selection when no stored config handle exists.
+- BLE telemetry currently maps to scalar `sample` / `samples` for waveform input; full 6-axis BLE IMU mapping requires parser and routing extensions.
+- Automated tests are unit-level only; there is no browser E2E harness for UI workflows.
+- Browser hardware support is best on Chrome/Edge desktop for Web Bluetooth/Web Serial APIs.
 
 ---
 
@@ -149,6 +201,47 @@ lib/                   sql-wasm.wasm (copied on npm install)
 
 ---
 
+## Release / Deploy Notes
+
+Deploy these artifacts together:
+- `index.html`
+- `styles.css`
+- `dist/`
+- `lib/sql-wasm.wasm`
+
+Hosting requirements:
+- Serve over HTTPS in production.
+- Preserve relative paths used by `index.html` (`dist/src/main.js` and `lib/sql-wasm.wasm`).
+- Use `http://localhost` for local hardware testing.
+
+---
+
+## Additional Docs
+
+- [`INTEGRATION.md`](INTEGRATION.md): firmware/transport contract for BLE + serial
+- [`BLUETOOTH_SETUP.md`](BLUETOOTH_SETUP.md): browser/device setup checklist
+
+---
+
+## Testing Scope
+
+Current automated coverage:
+- Store behavior and selector notifications
+- Storage payload normalization + persistence queue behavior
+- Profiles viewmodel logic
+
+Current gaps:
+- No automated DOM/UI flow tests
+- No automated Bluetooth/Serial integration tests against real hardware
+
+Run tests with:
+
+```bash
+npm test
+```
+
+---
+
 ## Architecture
 
 The app follows a **custom MVC pattern with an observer store** — no framework, no dependency injection container.
@@ -173,7 +266,7 @@ All state mutations go through `store.update()`. Direct property assignment bypa
 **Data not loading**
 - Check that your `supabase.config.json` URL and anon key are correct.
 - Confirm the `app_state` table exists in your Supabase project.
-- Clear the `tremor-db` key in `localStorage` if the local SQLite database is corrupt.
+- If local SQLite is corrupt, clear `localStorage["tremor-db"]` and reload.
 
 **WASM error on load**
 - Ensure `lib/sql-wasm.wasm` is being served. Run `npm install` to regenerate it.

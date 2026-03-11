@@ -20,6 +20,8 @@ import { bindParamInputs, bindSettingsEvents } from "./ui/bindEvents.js";
 import type { BluetoothService } from "./services/bluetooth/bluetoothService.js";
 import type { MockConnectionService } from "./services/mock/mockConnectionService.js";
 import type { MockTelemetryService } from "./services/mock/mockTelemetryService.js";
+import type { SerialService } from "./services/serial/serialService.js";
+import type { RawRecordService } from "./services/rawRecord/rawRecordService.js";
 import type { ConnectionView } from "./views/connectionView.js";
 import type { ModalManager } from "./views/modalManager.js";
 import type { TabsView } from "./views/tabsView.js";
@@ -62,6 +64,9 @@ let sequencesViewModel!: SequencesViewModel;
 let mockTelemetry!: MockTelemetryService;
 let bluetoothService!: BluetoothService;
 let mockConnection!: MockConnectionService;
+let serialService!: SerialService;
+let rawRecordService!: RawRecordService;
+let updateRawRecUI!: () => void;
 let sqliteStorage: SqliteStorageService | null = null;
 
 export type AppDependencies = {
@@ -69,6 +74,9 @@ export type AppDependencies = {
   elements: Elements;
   bluetoothService: BluetoothService;
   mockConnection: MockConnectionService;
+  serialService: SerialService;
+  rawRecordService: RawRecordService;
+  updateRawRecUI: () => void;
   mockTelemetry: MockTelemetryService;
   connectionView: ConnectionView;
   modalManager: ModalManager;
@@ -94,6 +102,8 @@ export function configureApp(deps: AppDependencies) {
   elements = deps.elements;
   bluetoothService = deps.bluetoothService;
   mockConnection = deps.mockConnection;
+  rawRecordService = deps.rawRecordService;
+  updateRawRecUI = deps.updateRawRecUI;
   mockTelemetry = deps.mockTelemetry;
   connectionView = deps.connectionView;
   modalManager = deps.modalManager;
@@ -132,11 +142,23 @@ function applyStoredData(parsed: StoredPayload | null) {
 
 async function loadData() {
   try {
-    const parsed = await loadStoredData();
-    applyStoredData(parsed);
+    // Apply local SQLite data immediately (fast, synchronous)
+    const local = sqliteStorage?.loadStoredData() ?? null;
+    if (local) {
+      applyStoredData(local);
+    }
+    // Always fetch from Supabase if configured — it is the source of truth
+    const remote = await loadStoredData();
+    if (remote) {
+      applyStoredData(remote);
+    } else if (!local) {
+      applyStoredData(null);
+    }
   } catch (error) {
     console.error("Failed to load stored data:", error);
-    applyStoredData(null);
+    if (!sqliteStorage?.loadStoredData()) {
+      applyStoredData(null);
+    }
   }
 }
 
@@ -306,6 +328,33 @@ export async function initApp() {
   elements.sidebarLogBtn.addEventListener("click", () => sessionsViewModel?.toggleLogging());
   elements.sessionsLogBtn.addEventListener("click", () => sessionsViewModel?.toggleLogging());
 
+  // Raw Data Recording
+  elements.rawRecStartBtn?.addEventListener("click", () => {
+    const duration = Number(elements.rawRecDuration?.value ?? 0);
+    void rawRecordService.start(duration);
+  });
+  elements.rawRecStopBtn?.addEventListener("click", () => {
+    void rawRecordService.stop();
+  });
+  // Show/hide card based on connection mode changes
+  elements.connectionMode.addEventListener("change", () => updateRawRecUI());
+
+  if (elements.importSessionBtn) {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".txt,.csv";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        void sessionsViewModel?.handleImportFile(file);
+        fileInput.value = "";
+      }
+    });
+    elements.importSessionBtn.addEventListener("click", () => fileInput.click());
+  }
+
   elements.sendBtn.addEventListener("click", () => paramsViewModel?.handleSend());
   elements.stopBtn.addEventListener("click", () => paramsViewModel?.handleStop());
 
@@ -347,7 +396,7 @@ export async function initApp() {
     elements.windowRange.addEventListener("input", (event) => {
       const target = event.target as HTMLInputElement;
       store.update((state) => {
-        state.visualization.windowSeconds = Number(target.value);
+        state.visualization.windowSeconds = Math.max(1, Number(target.value));
         const targetLength = getTargetBufferLength();
         state.visualization.buffer = state.visualization.buffer.slice(-targetLength);
       });
@@ -364,6 +413,13 @@ export async function initApp() {
       });
       visualizationViewModel?.updateChartControls();
       updateRangeFill(target);
+    });
+  }
+
+  if (elements.axisSelect) {
+    elements.axisSelect.addEventListener("change", (event) => {
+      const target = event.target as HTMLSelectElement;
+      visualizationViewModel?.setSelectedAxis(target.value as import("./state/types.js").ImuAxis);
     });
   }
 
@@ -392,4 +448,5 @@ export async function initApp() {
   state.visualization.buffer = new Array(getTargetBufferLength()).fill(0);
   visualizationViewModel?.init();
   void refreshSupabaseStatusUI();
+  updateRawRecUI();
 }
